@@ -2,17 +2,12 @@
 title IT Ticket System
 cd /d "%~dp0"
 
-if not exist ".env" (
-    copy .env.example .env >nul
-    echo [Created .env file - open it to change port]
-)
+if not exist ".env" copy .env.example .env >nul
+if not exist "node_modules" call npm install
+if not exist "data\uploads" mkdir data\uploads data\logs 2>nul
 
-if not exist "node_modules" (
-    echo Installing dependencies...
-    call npm install
-)
-if not exist "data\uploads" mkdir data\uploads >nul 2>&1
-if not exist "data\logs" mkdir data\logs >nul 2>&1
+set PORT=3000
+for /f "tokens=2 delims==" %%a in ('findstr /b "PORT=" .env 2^>nul') do set PORT=%%a
 
 cls
 echo.
@@ -20,30 +15,40 @@ echo  ===========================================
 echo     IT Ticket System
 echo  ===========================================
 echo.
-echo  [1] Development mode (hot reload)
-echo  [2] Production mode  (faster)
+echo  Current Port: %PORT%
 echo.
-set /p mode="Select mode (1/2): "
-if "%mode%"=="2" goto prod
+echo  [1] Start App
+echo  [2] Change Port
+echo  [3] Exit
+echo.
+set /p ch="Select (1-3): "
+if "%ch%"=="2" goto chport
+if "%ch%"=="3" exit /b
 
-:dev
+:start
 echo.
-echo  Starting in DEV mode...
-echo  Backend: http://localhost:3000
-echo  App:     http://localhost:5173
+echo  Building...
+call npm run build
+cls
 echo.
-call npm run dev
+echo  ===========================================
+echo     IT Ticket System
+echo  ===========================================
+echo.
+echo  App running at: http://localhost:%PORT%
+echo.
+set NODE_ENV=production
+start http://localhost:%PORT%
+node src/backend/server.js
 pause
 exit /b
 
-:prod
+:chport
 echo.
-echo  Building frontend...
-call npm run build
+set /p np="Enter port number (e.g. 3000): "
+if "%np%"=="" goto chport
+echo PORT=%np%> .env
 echo.
-echo  Starting in PRODUCTION mode...
-echo  App: http://localhost:3000
-echo.
-set NODE_ENV=production
-node src/backend/server.js
-pause
+echo Port changed to %np%. Starting...
+set PORT=%np%
+goto start

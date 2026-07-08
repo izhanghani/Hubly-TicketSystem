@@ -1,6 +1,5 @@
 node_modules/
 dist/
-release/
 data/*.db
 data/logs/
 data/uploads/
