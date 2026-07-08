@@ -1,6 +1,11 @@
 <div align="center">
   <img src="src/frontend/public/logo.svg" alt="Hubly" width="400" />
   <p><strong>Professional IT Help Desk Ticket Management System</strong></p>
+  <p>
+    <a href="https://izhanghani.github.io/Hubly-TicketSystem/">🌐 Website</a>
+    &nbsp;|&nbsp;
+    <a href="https://github.com/izhanghani/Hubly-TicketSystem">📦 GitHub</a>
+  </p>
 </div>
 
 <p align="center">

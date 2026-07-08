@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hubly — Professional Ticket Management System</title>
+  <meta name="description" content="Hubly is a professional IT help desk ticket management system with SLA tracking, role-based access, workflow automation, and real-time notifications. Open-source and self-hosted." />
+  <meta name="keywords" content="ticket system, help desk, IT support, SLA management, open source, self-hosted" />
+  <meta property="og:title" content="Hubly — Ticket Management System" />
+  <meta property="og:description" content="Professional IT Help Desk Ticket Management System. Open-source, self-hosted." />
+  <meta property="og:image" content="https://raw.githubusercontent.com/izhanghani/Hubly-TicketSystem/main/src/frontend/public/logo.svg" />
+  <meta property="og:url" content="https://izhanghani.github.io/Hubly-TicketSystem" />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" type="image/svg+xml" href="https://raw.githubusercontent.com/izhanghani/Hubly-TicketSystem/main/src/frontend/public/favicon.svg" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0f1e; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
+    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; flex: 1; }
+    header { text-align: center; padding: 60px 0 40px; }
+    .logo { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
+    .logo-icon { width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; box-shadow: 0 8px 32px rgba(99,102,241,0.3); }
+    h1 { font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .tagline { font-size: 18px; color: #64748b; margin-top: 12px; }
+    .btn { display: inline-block; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; transition: all 0.2s; margin: 8px; }
+    .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+    .btn-outline { border: 2px solid #334155; color: #e2e8f0; }
+    .btn-outline:hover { border-color: #6366f1; transform: translateY(-2px); }
+    .hero-btns { margin-top: 32px; }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 60px 0; }
+    .feature { background: linear-gradient(145deg, #1a2332, #151d2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 28px; transition: transform 0.2s; }
+    .feature:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.3); }
+    .feature i { font-size: 28px; color: #6366f1; margin-bottom: 16px; }
+    .feature h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .feature p { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+    .section-title { font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 40px; }
+    .screenshots { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 40px 0; }
+    .screenshot { background: linear-gradient(145deg, #1a2332, #151d2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 40px; text-align: center; color: #475569; font-size: 14px; }
+    .screenshot i { font-size: 48px; color: #334155; margin-bottom: 12px; }
+    footer { text-align: center; padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.06); color: #475569; font-size: 13px; }
+    footer a { color: #6366f1; text-decoration: none; }
+    .badge { display: inline-block; padding: 6px 14px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 20px; font-size: 12px; color: #a5b4fc; margin: 4px; }
+    .setup { background: linear-gradient(145deg, #1a2332, #151d2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 36px; margin: 40px 0; }
+    .setup code { display: block; background: rgba(0,0,0,0.3); padding: 16px 20px; border-radius: 10px; font-family: 'Cascadia Code', monospace; font-size: 14px; color: #6ee7b7; margin: 12px 0; }
+    .setup h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    @media (max-width: 600px) { h1 { font-size: 32px; } .screenshots { grid-template-columns: 1fr; } }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon"><i class="bi bi-ticket-perforated"></i></div>
+        <h1>Hubly</h1>
+      </div>
+      <p class="tagline">Professional IT Help Desk Ticket Management System</p>
+      <p style="color:#475569;font-size:14px;margin-top:8px">Open-source &bull; Self-hosted &bull; SQLite &bull; No complex setup</p>
+      <div class="hero-btns">
+        <a class="btn btn-primary" href="https://github.com/izhanghani/Hubly-TicketSystem"><i class="bi bi-github"></i> View on GitHub</a>
+        <a class="btn btn-outline" href="#setup"><i class="bi bi-rocket-takeoff"></i> Quick Start</a>
+      </div>
+    </header>
+
+    <div style="text-align:center;margin-bottom:20px">
+      <span class="badge">SLA Tracking</span>
+      <span class="badge">Role-Based Access</span>
+      <span class="badge">Real-Time</span>
+      <span class="badge">Dark Mode</span>
+      <span class="badge">AD/LDAP</span>
+      <span class="badge">Workflow Auto-Routing</span>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <i class="bi bi-ticket-perforated"></i>
+        <h3>Ticket Management</h3>
+        <p>Create, track, and manage tickets with full status workflow: open → in progress → resolved → closed.</p>
+      </div>
+      <div class="feature">
+        <i class="bi bi-clock-history"></i>
+        <h3>SLA Tracking</h3>
+        <p>Automated SLA monitoring with business hours, escalation rules, and real-time breach detection.</p>
+      </div>
+      <div class="feature">
+        <i class="bi bi-people"></i>
+        <h3>Role-Based Access</h3>
+        <p>Admin, Agent, Supervisor, and User roles with granular permissions and department-based visibility.</p>
+      </div>
+      <div class="feature">
+        <i class="bi bi-diagram-3"></i>
+        <h3>Workflow Automation</h3>
+        <p>Auto-route tickets to departments or specific agents based on customizable matching rules.</p>
+      </div>
+      <div class="feature">
+        <i class="bi bi-bell"></i>
+        <h3>Real-Time Notifications</h3>
+        <p>Instant alerts via Socket.IO and optional email notifications through SMTP.</p>
+      </div>
+      <div class="feature">
+        <i class="bi bi-bar-chart"></i>
+        <h3>Dashboard &amp; Reports</h3>
+        <p>Real-time statistics, charts, agent performance metrics, and CSV data export.</p>
+      </div>
+    </div>
+
+    <div id="setup" class="setup">
+      <h3>Quick Start</h3>
+      <p style="color:#94a3b8;font-size:14px;margin-bottom:16px">Get Hubly running in under a minute:</p>
+      <code>
+# Clone &amp; install<br>
+git clone https://github.com/izhanghani/Hubly-TicketSystem.git<br>
+cd Hubly-TicketSystem<br>
+npm install<br><br>
+# Start development server<br>
+npm run dev
+      </code>
+      <p style="color:#94a3b8;font-size:13px;margin-top:8px">Then open <strong>http://localhost:5173</strong> — Login: <strong>admin</strong> / <strong>admin123</strong></p>
+    </div>
+
+    <div style="text-align:center;margin:40px 0">
+      <p style="color:#475569;font-size:14px">Built with Node.js, Express, SQLite, Socket.IO, and Vite</p>
+      <div style="margin-top:12px">
+        <a href="https://github.com/izhanghani/Hubly-TicketSystem/stargazers" style="color:#64748b;text-decoration:none;font-size:14px"><i class="bi bi-star"></i> Star on GitHub</a>
+        <span style="color:#334155;margin:0 12px">|</span>
+        <a href="https://github.com/izhanghani/Hubly-TicketSystem/issues" style="color:#64748b;text-decoration:none;font-size:14px"><i class="bi bi-bug"></i> Report Issue</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p><a href="https://github.com/izhanghani/Hubly-TicketSystem">Hubly</a> &mdash; Open-source ticket management system</p>
+    <p style="margin-top:4px">&copy; 2026 &middot; MIT License</p>
+  </footer>
+</body>
+</html>
