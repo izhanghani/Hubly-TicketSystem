@@ -13,125 +13,1086 @@
   <meta property="og:url" content="https://izhanghani.github.io/Hubly-TicketSystem" />
   <meta name="robots" content="index, follow" />
   <link rel="icon" type="image/svg+xml" href="https://raw.githubusercontent.com/izhanghani/Hubly-TicketSystem/main/src/frontend/public/favicon.svg" />
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0f1e; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; }
-    .container { max-width: 960px; margin: 0 auto; padding: 40px 24px; flex: 1; }
-    header { text-align: center; padding: 60px 0 40px; }
-    .logo { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
-    .logo-icon { width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; box-shadow: 0 8px 32px rgba(99,102,241,0.3); }
-    h1 { font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #6366f1, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .tagline { font-size: 18px; color: #64748b; margin-top: 12px; }
-    .btn { display: inline-block; padding: 14px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; text-decoration: none; transition: all 0.2s; margin: 8px; }
-    .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; box-shadow: 0 4px 16px rgba(99,102,241,0.3); }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
-    .btn-outline { border: 2px solid #334155; color: #e2e8f0; }
-    .btn-outline:hover { border-color: #6366f1; transform: translateY(-2px); }
-    .hero-btns { margin-top: 32px; }
-    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 60px 0; }
-    .feature { background: linear-gradient(145deg, #1a2332, #151d2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 28px; transition: transform 0.2s; }
-    .feature:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.3); }
-    .feature i { font-size: 28px; color: #6366f1; margin-bottom: 16px; }
-    .feature h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .feature p { font-size: 14px; color: #94a3b8; line-height: 1.6; }
-    .section-title { font-size: 28px; font-weight: 800; text-align: center; margin-bottom: 40px; }
-    .screenshots { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 40px 0; }
-    .screenshot { background: linear-gradient(145deg, #1a2332, #151d2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 40px; text-align: center; color: #475569; font-size: 14px; }
-    .screenshot i { font-size: 48px; color: #334155; margin-bottom: 12px; }
-    footer { text-align: center; padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.06); color: #475569; font-size: 13px; }
-    footer a { color: #6366f1; text-decoration: none; }
-    .badge { display: inline-block; padding: 6px 14px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); border-radius: 20px; font-size: 12px; color: #a5b4fc; margin: 4px; }
-    .setup { background: linear-gradient(145deg, #1a2332, #151d2b); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 36px; margin: 40px 0; }
-    .setup code { display: block; background: rgba(0,0,0,0.3); padding: 16px 20px; border-radius: 10px; font-family: 'Cascadia Code', monospace; font-size: 14px; color: #6ee7b7; margin: 12px 0; }
-    .setup h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-    @media (max-width: 600px) { h1 { font-size: 32px; } .screenshots { grid-template-columns: 1fr; } }
-  </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #a78bfa;
+      --accent: #06b6d4;
+      --bg: #0a0f1e;
+      --bg-card: #0f172a;
+      --bg-elevated: #1e293b;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --border: rgba(255,255,255,0.06);
+      --gradient: linear-gradient(135deg, #6366f1, #a78bfa);
+      --gradient-accent: linear-gradient(135deg, #6366f1, #06b6d4);
+      --shadow: 0 8px 32px rgba(99,102,241,0.15);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 20%, rgba(6,182,212,0.06) 0%, transparent 50%),
+                  radial-gradient(ellipse at 40% 80%, rgba(139,92,246,0.05) 0%, transparent 50%);
+      z-index: -1;
+      animation: bgShift 20s ease-in-out infinite;
+    }
+
+    @keyframes bgShift {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(2%, 1%) rotate(1deg); }
+      66% { transform: translate(-1%, -1%) rotate(-1deg); }
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      background: rgba(10, 15, 30, 0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    nav.scrolled {
+      padding: 10px 24px;
+      background: rgba(10, 15, 30, 0.95);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .nav-brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--gradient);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #fff;
+    }
+
+    .nav-brand span {
+      font-size: 20px;
+      font-weight: 800;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      padding: 8px 20px !important;
+      background: var(--gradient);
+      color: #fff !important;
+      border-radius: 8px;
+      font-weight: 600 !important;
+      transition: transform 0.2s, box-shadow 0.2s !important;
+    }
+
+    .nav-cta:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: var(--shadow) !important;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      flex: 1;
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 0 80px;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 100px;
+      font-size: 13px;
+      color: var(--primary-light);
+      font-weight: 500;
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    .hero-badge i { font-size: 14px; }
+
+    .hero h1 {
+      font-size: clamp(40px, 8vw, 72px);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeInUp 0.6s ease-out 0.1s both;
+    }
+
+    .hero h1 span {
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 20px auto 0;
+      line-height: 1.7;
+      animation: fadeInUp 0.6s ease-out 0.2s both;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 28px;
+      animation: fadeInUp 0.6s ease-out 0.3s both;
+    }
+
+    .hero-tag {
+      padding: 6px 16px;
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 100px;
+      font-size: 12px;
+      color: #94a3b8;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .hero-tag:hover {
+      background: rgba(99,102,241,0.15);
+      border-color: rgba(99,102,241,0.3);
+      color: var(--primary-light);
+      transform: translateY(-1px);
+    }
+
+    .hero-btns {
+      margin-top: 36px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      animation: fadeInUp 0.6s ease-out 0.4s both;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--gradient);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary);
+      background: rgba(99,102,241,0.1);
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost {
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Hero scroll indicator */
+    .scroll-indicator {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      animation: fadeInUp 0.6s ease-out 0.6s both;
+    }
+
+    .scroll-indicator .mouse {
+      width: 24px;
+      height: 38px;
+      border: 2px solid var(--text-muted);
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .scroll-indicator .mouse::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 2px;
+      animation: scrollWheel 2s ease-in-out infinite;
+    }
+
+    @keyframes scrollWheel {
+      0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+      50% { transform: translateX(-50%) translateY(8px); opacity: 0.3; }
+    }
+
+    /* Section */
+    .section {
+      padding: 100px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-header p {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 500px;
+      margin: 12px auto 0;
+      line-height: 1.6;
+    }
+
+    /* Features */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      group: true;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gradient);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(99,102,241,0.3);
+      box-shadow: 0 20px 60px rgba(99,102,241,0.1);
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 20px;
+      background: rgba(99,102,241,0.1);
+      color: var(--primary-light);
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover .feature-icon {
+      background: var(--gradient);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.7;
+    }
+
+    .feature-card .feature-number {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      font-size: 48px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.03);
+      line-height: 1;
+      user-select: none;
+      transition: color 0.3s;
+    }
+
+    .feature-card:hover .feature-number {
+      color: rgba(99,102,241,0.08);
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-bottom: 100px;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 28px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .stat-card .number {
+      font-size: 32px;
+      font-weight: 900;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .stat-card .label {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Setup */
+    .setup-section {
+      background: linear-gradient(145deg, var(--bg-card), rgba(15,23,42,0.5));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px;
+      margin-top: 60px;
+    }
+
+    .setup-section h2 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .setup-section > p {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 28px;
+    }
+
+    .setup-tabs {
+      display: flex;
+      gap: 4px;
+      background: rgba(0,0,0,0.2);
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      width: fit-content;
+    }
+
+    .setup-tab {
+      padding: 8px 18px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .setup-tab.active {
+      background: rgba(99,102,241,0.2);
+      color: var(--primary-light);
+    }
+
+    .setup-tab:hover:not(.active) {
+      color: var(--text);
+    }
+
+    .code-block {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 24px;
+      font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #6ee7b7;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .code-block .comment { color: #475569; }
+    .code-block .command { color: #e2e8f0; }
+    .code-block .string { color: #fbbf24; }
+    .code-block .path { color: #93c5fd; }
+
+    .setup-login {
+      display: flex;
+      gap: 16px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .login-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .login-badge strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .login-badge .role {
+      padding: 2px 8px;
+      background: rgba(99,102,241,0.15);
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--primary-light);
+    }
+
+    /* Tech Stack */
+    .tech-section {
+      text-align: center;
+      margin: 80px 0;
+    }
+
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .tech-item {
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tech-item:hover {
+      border-color: rgba(99,102,241,0.3);
+      color: var(--text);
+      transform: translateY(-2px);
+    }
+
+    .tech-item i { color: var(--primary-light); font-size: 16px; }
+
+    /* CTA Section */
+    .cta-section {
+      text-align: center;
+      padding: 80px 0;
+      position: relative;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(99,102,241,0.08), transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .cta-section p {
+      color: var(--text-muted);
+      margin: 12px auto 28px;
+      max-width: 500px;
+      font-size: 15px;
+    }
+
+    .cta-btns {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    footer p {
+      color: #475569;
+      font-size: 13px;
+    }
+
+    footer p a {
+      color: var(--primary-light);
+      text-decoration: none;
+    }
+
+    /* Mobile nav toggle */
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Intersection Observer animations */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(10, 15, 30, 0.98);
+        border-bottom: 1px solid var(--border);
+        padding: 16px 24px;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .nav-links.open {
+        display: flex;
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .setup-section {
+        padding: 28px 20px;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hero-btns {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .btn {
+        justify-content: center;
+      }
+    }
+
+    /* Glow effect for primary button */
+    .glow {
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(99,102,241,0.3); }
+      50% { box-shadow: 0 4px 40px rgba(99,102,241,0.5); }
+    }
+  </style>
 </head>
 <body>
+  <!-- Navigation -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <div class="nav-brand-icon"><i class="bi bi-ticket-perforated"></i></div>
+        <span>Hubly</span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+        <i class="bi bi-list"></i>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#setup">Quick Start</a></li>
+        <li><a href="https://github.com/izhanghani/Hubly-TicketSystem" target="_blank"><i class="bi bi-github"></i> GitHub</a></li>
+        <li><a href="https://github.com/izhanghani/Hubly-TicketSystem" class="nav-cta">Get Started</a></li>
+      </ul>
+    </div>
+  </nav>
+
   <div class="container">
-    <header>
-      <div class="logo">
-        <div class="logo-icon"><i class="bi bi-ticket-perforated"></i></div>
-        <h1>Hubly</h1>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">
+        <i class="bi bi-star-fill"></i>
+        Open Source &mdash; MIT License
       </div>
-      <p class="tagline">Professional IT Help Desk Ticket Management System</p>
-      <p style="color:#475569;font-size:14px;margin-top:8px">Open-source &bull; Self-hosted &bull; SQLite &bull; No complex setup</p>
+      <h1>Simplify <span>IT Support</span><br>with Hubly</h1>
+      <p>Professional IT help desk ticket management system with SLA tracking, role-based access, workflow automation, and real-time notifications.</p>
+      <div class="hero-tags">
+        <span class="hero-tag"><i class="bi bi-shield-check"></i> SLA Tracking</span>
+        <span class="hero-tag"><i class="bi bi-people"></i> RBAC</span>
+        <span class="hero-tag"><i class="bi bi-lightning-charge"></i> Real-Time</span>
+        <span class="hero-tag"><i class="bi bi-moon-stars"></i> Dark Mode</span>
+        <span class="hero-tag"><i class="bi bi-diagram-3"></i> Auto-Routing</span>
+        <span class="hero-tag"><i class="bi bi-database"></i> SQLite</span>
+      </div>
       <div class="hero-btns">
-        <a class="btn btn-primary" href="https://github.com/izhanghani/Hubly-TicketSystem"><i class="bi bi-github"></i> View on GitHub</a>
-        <a class="btn btn-outline" href="#setup"><i class="bi bi-rocket-takeoff"></i> Quick Start</a>
+        <a class="btn btn-primary glow" href="https://github.com/izhanghani/Hubly-TicketSystem">
+          <i class="bi bi-github"></i> View on GitHub
+          <i class="bi bi-arrow-up-right"></i>
+        </a>
+        <a class="btn btn-outline" href="#setup">
+          <i class="bi bi-rocket-takeoff"></i> Quick Start
+        </a>
+        <a class="btn btn-ghost" href="#features">
+          <i class="bi bi-grid-3x3-gap"></i> Features
+        </a>
       </div>
-    </header>
+      <div class="scroll-indicator">
+        <div class="mouse"></div>
+        <span>Scroll to explore</span>
+      </div>
+    </section>
 
-    <div style="text-align:center;margin-bottom:20px">
-      <span class="badge">SLA Tracking</span>
-      <span class="badge">Role-Based Access</span>
-      <span class="badge">Real-Time</span>
-      <span class="badge">Dark Mode</span>
-      <span class="badge">AD/LDAP</span>
-      <span class="badge">Workflow Auto-Routing</span>
-    </div>
-
-    <div class="features">
-      <div class="feature">
-        <i class="bi bi-ticket-perforated"></i>
-        <h3>Ticket Management</h3>
-        <p>Create, track, and manage tickets with full status workflow: open → in progress → resolved → closed.</p>
+    <!-- Stats -->
+    <div class="stats-grid reveal">
+      <div class="stat-card">
+        <div class="number">100%</div>
+        <div class="label">Open Source</div>
       </div>
-      <div class="feature">
-        <i class="bi bi-clock-history"></i>
-        <h3>SLA Tracking</h3>
-        <p>Automated SLA monitoring with business hours, escalation rules, and real-time breach detection.</p>
+      <div class="stat-card">
+        <div class="number">4</div>
+        <div class="label">User Roles</div>
       </div>
-      <div class="feature">
-        <i class="bi bi-people"></i>
-        <h3>Role-Based Access</h3>
-        <p>Admin, Agent, Supervisor, and User roles with granular permissions and department-based visibility.</p>
+      <div class="stat-card">
+        <div class="number">Zero</div>
+        <div class="label">External Services</div>
       </div>
-      <div class="feature">
-        <i class="bi bi-diagram-3"></i>
-        <h3>Workflow Automation</h3>
-        <p>Auto-route tickets to departments or specific agents based on customizable matching rules.</p>
-      </div>
-      <div class="feature">
-        <i class="bi bi-bell"></i>
-        <h3>Real-Time Notifications</h3>
-        <p>Instant alerts via Socket.IO and optional email notifications through SMTP.</p>
-      </div>
-      <div class="feature">
-        <i class="bi bi-bar-chart"></i>
-        <h3>Dashboard &amp; Reports</h3>
-        <p>Real-time statistics, charts, agent performance metrics, and CSV data export.</p>
+      <div class="stat-card">
+        <div class="number">1</div>
+        <div class="label">Command Setup</div>
       </div>
     </div>
 
-    <div id="setup" class="setup">
-      <h3>Quick Start</h3>
-      <p style="color:#94a3b8;font-size:14px;margin-bottom:16px">Get Hubly running in under a minute:</p>
-      <code>
-# Clone &amp; install<br>
-git clone https://github.com/izhanghani/Hubly-TicketSystem.git<br>
-cd Hubly-TicketSystem<br>
-npm install<br><br>
-# Start development server<br>
-npm run dev
-      </code>
-      <p style="color:#94a3b8;font-size:13px;margin-top:8px">Then open <strong>http://localhost:5173</strong> — Login: <strong>admin</strong> / <strong>admin123</strong></p>
-    </div>
+    <!-- Features -->
+    <section id="features" class="section">
+      <div class="section-header reveal">
+        <h2>Everything you need to <br>manage IT support</h2>
+        <p>From ticket creation to SLA monitoring, Hubly provides a complete toolkit for your help desk.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-ticket-perforated"></i></div>
+          <div class="feature-number">01</div>
+          <h3>Ticket Management</h3>
+          <p>Create, track, and manage tickets with full status workflow: open, in progress, resolved, and closed.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-clock-history"></i></div>
+          <div class="feature-number">02</div>
+          <h3>SLA Tracking</h3>
+          <p>Automated SLA monitoring with business hours, escalation rules, and real-time breach detection.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-people"></i></div>
+          <div class="feature-number">03</div>
+          <h3>Role-Based Access</h3>
+          <p>Admin, Agent, Supervisor, and User roles with granular permissions and department-based visibility.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-diagram-3"></i></div>
+          <div class="feature-number">04</div>
+          <h3>Workflow Automation</h3>
+          <p>Auto-route tickets to departments or specific agents based on customizable matching rules.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-bell"></i></div>
+          <div class="feature-number">05</div>
+          <h3>Real-Time Notifications</h3>
+          <p>Instant alerts via Socket.IO and optional email notifications through SMTP.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-bar-chart"></i></div>
+          <div class="feature-number">06</div>
+          <h3>Dashboard & Reports</h3>
+          <p>Real-time statistics, charts, agent performance metrics, and CSV data export.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-upload"></i></div>
+          <div class="feature-number">07</div>
+          <h3>File Attachments</h3>
+          <p>Drag-and-drop file uploads with validation and organized attachment management per ticket.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-moon-stars"></i></div>
+          <div class="feature-number">08</div>
+          <h3>Dark Mode</h3>
+          <p>Built-in dark and light theme toggle with smooth transitions and system preference detection.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+          <div class="feature-number">09</div>
+          <h3>Audit Logs</h3>
+          <p>Full audit trail for every action with detailed timestamps, user attribution, and exportable logs.</p>
+        </div>
+      </div>
+    </section>
 
-    <div style="text-align:center;margin:40px 0">
-      <p style="color:#475569;font-size:14px">Built with Node.js, Express, SQLite, Socket.IO, and Vite</p>
-      <div style="margin-top:12px">
-        <a href="https://github.com/izhanghani/Hubly-TicketSystem/stargazers" style="color:#64748b;text-decoration:none;font-size:14px"><i class="bi bi-star"></i> Star on GitHub</a>
-        <span style="color:#334155;margin:0 12px">|</span>
-        <a href="https://github.com/izhanghani/Hubly-TicketSystem/issues" style="color:#64748b;text-decoration:none;font-size:14px"><i class="bi bi-bug"></i> Report Issue</a>
+    <!-- Quick Start -->
+    <section id="setup" class="section">
+      <div class="section-header reveal">
+        <h2>Get started in seconds</h2>
+        <p>No complex setup. No cloud dependencies. Just clone and run.</p>
+      </div>
+      <div class="setup-section reveal">
+        <h2>Quick Start</h2>
+        <p>Get Hubly running on your machine in under a minute.</p>
+        <div class="setup-tabs">
+          <button class="setup-tab active" onclick="switchTab(this, 'npm')"><i class="bi bi-terminal"></i> npm</button>
+          <button class="setup-tab" onclick="switchTab(this, 'windows')"><i class="bi bi-windows"></i> Windows</button>
+          <button class="setup-tab" onclick="switchTab(this, 'docker')"><i class="bi bi-box"></i> Docker</button>
+        </div>
+        <div class="code-block" id="tab-npm">
+          <span class="comment"># Clone &amp; install</span><br>
+          <span class="command">git clone</span> <span class="path">https://github.com/izhanghani/Hubly-TicketSystem.git</span><br>
+          <span class="command">cd</span> <span class="path">Hubly-TicketSystem</span><br>
+          <span class="command">npm install</span><br><br>
+          <span class="comment"># Start development</span><br>
+          <span class="command">npm run dev</span>
+        </div>
+        <div class="code-block" id="tab-windows" style="display:none">
+          <span class="comment"># Just double-click:</span><br>
+          <span class="path">Start App.vbs</span><br><br>
+          <span class="comment"># Or from terminal:</span><br>
+          <span class="command">npm install</span><br>
+          <span class="command">npm run dev</span>
+        </div>
+        <div class="code-block" id="tab-docker" style="display:none">
+          <span class="comment"># Coming soon — Docker support in progress</span><br>
+          <span class="command">docker pull</span> <span class="string">hubly/hubly</span><br>
+          <span class="command">docker run -p 3000:3000</span> <span class="string">hubly/hubly</span>
+        </div>
+        <div class="setup-login">
+          <span class="login-badge"><i class="bi bi-person"></i> <strong>admin</strong> <span class="role">Admin</span></span>
+          <span class="login-badge"><i class="bi bi-person"></i> <strong>supervisor</strong> <span class="role">Supervisor</span></span>
+          <span class="login-badge"><i class="bi bi-person"></i> <strong>it1</strong> <span class="role">Agent</span></span>
+          <span class="login-badge"><i class="bi bi-person"></i> <strong>user1</strong> <span class="role">User</span></span>
+          <span class="login-badge"><i class="bi bi-key"></i> Password: <strong>admin123</strong></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <div class="tech-section reveal">
+      <div class="section-header">
+        <h2>Built with modern tech</h2>
+        <p>Open-source stack you already know and love.</p>
+      </div>
+      <div class="tech-grid">
+        <span class="tech-item"><i class="bi bi-node-plus"></i> Node.js</span>
+        <span class="tech-item"><i class="bi bi-lightning-charge"></i> Express</span>
+        <span class="tech-item"><i class="bi bi-database"></i> SQLite</span>
+        <span class="tech-item"><i class="bi bi-broadcast"></i> Socket.IO</span>
+        <span class="tech-item"><i class="bi bi-filetype-js"></i> Vanilla JS</span>
+        <span class="tech-item"><i class="bi bi-vr"></i> Vite</span>
+        <span class="tech-item"><i class="bi bi-shield-lock"></i> JWT + bcrypt</span>
       </div>
     </div>
+
+    <!-- CTA -->
+    <section class="cta-section reveal">
+      <h2>Ready to streamline your IT support?</h2>
+      <p>Star on GitHub, contribute, or deploy your own instance today.</p>
+      <div class="cta-btns">
+        <a class="btn btn-primary glow" href="https://github.com/izhanghani/Hubly-TicketSystem">
+          <i class="bi bi-star"></i> Star on GitHub
+        </a>
+        <a class="btn btn-outline" href="https://github.com/izhanghani/Hubly-TicketSystem/issues">
+          <i class="bi bi-bug"></i> Report Issue
+        </a>
+      </div>
+    </section>
   </div>
 
+  <!-- Footer -->
   <footer>
-    <p><a href="https://github.com/izhanghani/Hubly-TicketSystem">Hubly</a> &mdash; Open-source ticket management system</p>
-    <p style="margin-top:4px">&copy; 2026 &middot; MIT License</p>
+    <div class="footer-inner">
+      <div class="footer-links">
+        <a href="https://github.com/izhanghani/Hubly-TicketSystem"><i class="bi bi-github"></i> GitHub</a>
+        <a href="https://github.com/izhanghani/Hubly-TicketSystem/issues"><i class="bi bi-chat-dots"></i> Issues</a>
+        <a href="https://github.com/izhanghani/Hubly-TicketSystem/blob/main/LICENSE"><i class="bi bi-file-text"></i> License</a>
+      </div>
+      <p>
+        <a href="https://github.com/izhanghani/Hubly-TicketSystem">Hubly</a> &mdash; Open-source IT help desk ticket management system
+      </p>
+      <p>&copy; 2026 &middot; MIT License &middot; Built with <i class="bi bi-suit-heart-fill" style="color:#ef4444"></i></p>
+    </div>
   </footer>
+
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // Mobile nav toggle
+    const navToggle = document.getElementById('navToggle');
+    const navLinks = document.getElementById('navLinks');
+    navToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('open');
+      const icon = navToggle.querySelector('i');
+      icon.className = navLinks.classList.contains('open') ? 'bi bi-x-lg' : 'bi bi-list';
+    });
+
+    // Close nav on link click
+    navLinks.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        navToggle.querySelector('i').className = 'bi bi-list';
+      });
+    });
+
+    // Intersection Observer for reveal animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Setup tab switching
+    function switchTab(btn, tab) {
+      const parent = btn.parentElement;
+      parent.querySelectorAll('.setup-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const container = parent.parentElement;
+      container.querySelectorAll('.code-block').forEach(b => b.style.display = 'none');
+      document.getElementById('tab-' + tab).style.display = 'block';
+    }
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
