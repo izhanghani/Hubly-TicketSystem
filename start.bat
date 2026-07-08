@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 if not exist "node_modules" (
     echo Installing dependencies...
-    call npm install --silent
+    call npm install
 )
 if not exist "data\uploads" mkdir data\uploads >nul 2>&1
 if not exist "data\logs" mkdir data\logs >nul 2>&1
