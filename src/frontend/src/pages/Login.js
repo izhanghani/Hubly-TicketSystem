@@ -19,7 +19,7 @@ export default class LoginPage {
       const appName = allSettings.find(s => s.key === 'app_name');
       const companyName = allSettings.find(s => s.key === 'branding_company_name' || s.key === 'company_name');
       const footerText = allSettings.find(s => s.key === 'branding_footer_text');
-      if (title && appName) title.textContent = appName.value || 'IT Ticket System Pro';
+      if (title && appName) title.textContent = appName.value || 'Hubly';
       if (subtitle) subtitle.textContent = companyName ? `Sign in to ${companyName.value}` : 'Sign in to your account';
       if (footer && footerText) footer.textContent = `© ${new Date().getFullYear()} ${footerText.value}`;
     } catch {}
@@ -61,7 +61,7 @@ export default class LoginPage {
         <div class="login-card">
           <div class="login-logo">
             <div class="logo-circle"><i class="bi bi-ticket-perforated"></i></div>
-            <h1>IT Ticket System Pro</h1>
+            <h1>Hubly</h1>
             <p>Sign in to your account</p>
           </div>
           <form id="login-form">
@@ -80,7 +80,7 @@ export default class LoginPage {
             <div class="login-error" id="login-error"></div>
           </form>
           <div class="login-footer" style="text-align:center;margin-top:24px;font-size:12px;color:rgba(255,255,255,0.25)">
-            &copy; 2026 IT Ticket System Pro
+            &copy; 2026 Hubly
           </div>
         </div>
       </div>

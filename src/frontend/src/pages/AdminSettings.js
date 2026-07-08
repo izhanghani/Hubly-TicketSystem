@@ -372,7 +372,7 @@ export default class AdminSettingsPage {
           <form id="branding-form">
             <div class="form-group">
               <label class="form-label">Company Name</label>
-              <input class="form-input" id="brand-company-name" value="${escapeHtml(brand.branding_company_name || 'Ticket System')}" />
+              <input class="form-input" id="brand-company-name" value="${escapeHtml(brand.branding_company_name || 'Hubly')}" />
             </div>
             <div class="form-group">
               <label class="form-label">System Tagline</label>
@@ -400,7 +400,7 @@ export default class AdminSettingsPage {
             </div>
             <div class="form-group">
               <label class="form-label">Footer Text</label>
-              <input class="form-input" id="brand-footer-text" value="${escapeHtml(brand.branding_footer_text || 'IT Ticket System Pro')}" />
+              <input class="form-input" id="brand-footer-text" value="${escapeHtml(brand.branding_footer_text || 'Hubly')}" />
             </div>
             <button type="submit" class="btn btn-primary">Save Branding</button>
           </form>

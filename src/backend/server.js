@@ -226,7 +226,7 @@ p{color:#94a3b8;font-size:15px;line-height:1.7;margin-bottom:8px}
           } catch {}
         }
         const db = require('./database');
-        const companyName = db.getSetting('branding_company_name') || 'IT Ticket System Pro';
+        const companyName = db.getSetting('branding_company_name') || 'Hubly';
         const logoSetting = db.get("SELECT value FROM settings WHERE key = 'app_logo'");
         const logoHtml = (logoSetting && logoSetting.value) ? `<img src="/api/settings/logo" alt="Logo" />` : '<i class="bi bi-tools"></i>';
         const year = new Date().getFullYear();

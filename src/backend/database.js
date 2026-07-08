@@ -342,7 +342,7 @@ function seedDefaults() {
   exec("INSERT INTO sla_policies (name, priority_id, response_time_minutes, resolution_time_minutes, business_hours_only) VALUES ('High SLA', 3, 60, 480, 1)");
   exec("INSERT INTO sla_policies (name, priority_id, response_time_minutes, resolution_time_minutes, business_hours_only) VALUES ('Critical SLA', 4, 15, 120, 0)");
 
-  exec("INSERT INTO settings (key, value, type, category, description) VALUES ('app_name', 'IT Ticket System Pro', 'text', 'general', 'Application name')");
+  exec("INSERT INTO settings (key, value, type, category, description) VALUES ('app_name', 'Hubly', 'text', 'general', 'Application name')");
   exec("INSERT INTO settings (key, value, type, category, description) VALUES ('app_logo', '', 'image', 'branding', 'Company logo')");
   exec("INSERT INTO settings (key, value, type, category, description) VALUES ('company_name', 'Your Company', 'text', 'general', 'Company name')");
   exec("INSERT INTO settings (key, value, type, category, description) VALUES ('ticket_prefix', 'TKT', 'text', 'tickets', 'Ticket number prefix')");
@@ -401,7 +401,7 @@ function seedDefaults() {
   exec("INSERT INTO settings (key, value, type, category, description) VALUES ('branding_tagline', 'Professional IT Ticket Management', 'text', 'branding', 'System tagline')");
   exec("INSERT INTO settings (key, value, type, category, description) VALUES ('branding_primary_color', '#2563eb', 'text', 'branding', 'Primary brand color')");
   exec("INSERT INTO settings (key, value, type, category, description) VALUES ('branding_secondary_color', '#64748b', 'text', 'branding', 'Secondary brand color')");
-  exec("INSERT INTO settings (key, value, type, category, description) VALUES ('branding_footer_text', 'IT Ticket System Pro', 'text', 'branding', 'Footer text')");
+  exec("INSERT INTO settings (key, value, type, category, description) VALUES ('branding_footer_text', 'Hubly', 'text', 'branding', 'Footer text')");
   exec("INSERT INTO settings (key, value, type, category, description) VALUES ('app_favicon', '', 'image', 'branding', 'Favicon')");
 
   // Theme Settings

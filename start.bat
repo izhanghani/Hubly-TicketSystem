@@ -1,5 +1,5 @@
 @echo off
-title IT Ticket System
+title Hubly
 cd /d "%~dp0"
 
 if not exist ".env" copy .env.example .env >nul
@@ -12,7 +12,7 @@ for /f "tokens=2 delims==" %%a in ('findstr /b "PORT=" .env 2^>nul') do set PORT
 cls
 echo.
 echo  ===========================================
-echo     IT Ticket System
+echo     Hubly — Ticket System
 echo  ===========================================
 echo.
 echo  Current Port: %PORT%
@@ -32,7 +32,7 @@ call npm run build
 cls
 echo.
 echo  ===========================================
-echo     IT Ticket System
+echo     Hubly — Ticket System
 echo  ===========================================
 echo.
 echo  App running at: http://localhost:%PORT%

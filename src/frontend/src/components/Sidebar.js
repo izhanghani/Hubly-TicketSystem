@@ -27,7 +27,7 @@ const Sidebar = {
         <div class="sidebar-logo">
           <div class="logo-icon"><i class="bi bi-ticket-perforated"></i></div>
           <div class="logo-text">
-            Ticket System
+            Hubly
             <small id="company-name-display">Professional</small>
           </div>
         </div>
@@ -42,7 +42,7 @@ const Sidebar = {
             </a>
           </div>
         </nav>
-        <div class="sidebar-footer" id="sidebar-footer">IT Ticket System Pro v2.0</div>
+        <div class="sidebar-footer" id="sidebar-footer">Hubly v2.0</div>
       </aside>
       <div class="sidebar-overlay" id="sidebar-overlay"></div>
     `;

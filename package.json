@@ -1,7 +1,7 @@
 {
-  "name": "it-ticket-system",
+  "name": "hubly",
   "version": "2.0.0",
-  "description": "Professional IT Help Desk Ticket System with SLA, AD Sync, Role-based Access",
+  "description": "Professional IT Help Desk Ticket Management System",
   "scripts": {
     "start": "npm run dev",
     "dev": "concurrently \"npm run server\" \"npm run frontend\"",

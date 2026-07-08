@@ -38,10 +38,10 @@ const config = {
     secure: process.env.SMTP_SECURE === 'true',
     user: process.env.SMTP_USER || runtimeConfig.smtpUser || '',
     pass: process.env.SMTP_PASS || runtimeConfig.smtpPass || '',
-    from: process.env.SMTP_FROM || runtimeConfig.smtpFrom || 'noreply@ticket-system.local'
+    from: process.env.SMTP_FROM || runtimeConfig.smtpFrom || 'noreply@hubly.local'
   },
   app: {
-    name: 'IT Ticket System Pro',
+    name: 'Hubly',
     version: '2.0.0',
     logoPath: '/api/settings/logo'
   }
