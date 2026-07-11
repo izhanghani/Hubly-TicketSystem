@@ -1,0 +1,23 @@
+node_modules
+npm-debug.log
+dist
+.git
+.gitignore
+README.md
+.env
+.DS_Store
+Thumbs.db
+data/logs
+data/uploads
+data/*.db
+*.log
+.vscode
+.idea
+coverage
+.nyc_output
+start.bat
+Start App.vbs
+docs
+.next
+.nuxt
+out

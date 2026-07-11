@@ -199,11 +199,11 @@ export default class AdminSettingsPage {
           <table><thead><tr><th>Name</th><th>Level</th><th>Color</th><th>SLA Response</th><th>SLA Resolution</th><th>Status</th><th></th></tr></thead>
           <tbody>${priorities.map(p => `<tr>
             <td><span style="font-weight:500">${escapeHtml(p.name)}</span></td>
-            <td><span class="badge">${p.level}</span></td>
+            <td><span class="status-badge badge-closed" style="font-size:11px;padding:2px 10px">Lvl ${p.level}</span></td>
             <td><span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:${p.color};vertical-align:middle"></span> ${p.color}</td>
             <td>${p.sla_response_minutes}m</td>
             <td>${p.sla_resolution_minutes}m</td>
-            <td>${p.is_active ? '<span style="color:var(--success)">Active</span>' : '<span style="color:var(--danger)">Inactive</span>'}</td>
+            <td>${p.is_active ? '<span class="status-badge badge-resolved" style="font-size:11px;padding:2px 10px">Active</span>' : '<span class="status-badge badge-cancelled" style="font-size:11px;padding:2px 10px">Inactive</span>'}</td>
             <td><button class="btn btn-sm btn-ghost" onclick="window._editPriority(${p.id})"><i class="bi bi-pencil"></i></button></td>
           </tr>`).join('')}</tbody></table>
         </div>
@@ -227,7 +227,7 @@ export default class AdminSettingsPage {
             <td>${p.response_time_minutes}m</td>
             <td>${p.resolution_time_minutes}m</td>
             <td>${p.business_hours_only ? '<i class="bi bi-clock" style="color:var(--success)"></i>' : '<i class="bi bi-clock" style="color:var(--warning)"></i>'}</td>
-            <td>${p.is_active ? 'Active' : 'Inactive'}</td>
+            <td>${p.is_active ? '<span class="status-badge badge-resolved" style="font-size:11px;padding:2px 10px">Active</span>' : '<span class="status-badge badge-cancelled" style="font-size:11px;padding:2px 10px">Inactive</span>'}</td>
             <td><button class="btn btn-sm btn-ghost" onclick="window._editSLAPolicy(${p.id})"><i class="bi bi-pencil"></i></button></td>
           </tr>`;
           }).join('')}</tbody></table>
@@ -257,7 +257,7 @@ export default class AdminSettingsPage {
             <td><i class="bi bi-${t.icon || 'ticket'}"></i></td>
             <td><span style="display:inline-block;width:20px;height:20px;border-radius:4px;background:${t.color};vertical-align:middle"></span></td>
             <td style="font-size:13px;color:var(--text-secondary)">${escapeHtml(t.description || '')}</td>
-            <td>${t.is_active ? 'Active' : 'Inactive'}</td>
+            <td>${t.is_active ? '<span class="status-badge badge-resolved" style="font-size:11px;padding:2px 10px">Active</span>' : '<span class="status-badge badge-cancelled" style="font-size:11px;padding:2px 10px">Inactive</span>'}</td>
             <td><button class="btn btn-sm btn-ghost" onclick="window._editType(${t.id})"><i class="bi bi-pencil"></i></button></td>
           </tr>`).join('')}</tbody></table>
         </div>
@@ -276,7 +276,7 @@ export default class AdminSettingsPage {
               <td>${escapeHtml(c.name)}</td>
               <td><span style="font-size:13px">${escapeHtml(typeName)}</span></td>
               <td style="font-size:13px;color:var(--text-secondary)">${escapeHtml(c.description || '')}</td>
-              <td>${c.is_active ? 'Active' : 'Inactive'}</td>
+              <td>${c.is_active ? '<span class="status-badge badge-resolved" style="font-size:11px;padding:2px 10px">Active</span>' : '<span class="status-badge badge-cancelled" style="font-size:11px;padding:2px 10px">Inactive</span>'}</td>
               <td><button class="btn btn-sm btn-ghost" onclick="window._editCategory(${c.id})"><i class="bi bi-pencil"></i></button></td>
             </tr>`;
           }).join('')}</tbody></table>
@@ -413,8 +413,11 @@ export default class AdminSettingsPage {
             <div id="logo-preview" style="margin-bottom:12px">
               <img src="/api/settings/logo" style="max-height:80px;border-radius:8px;border:1px solid var(--border)" onerror="this.style.display='none'" />
             </div>
-            <input type="file" class="form-input" id="logo-upload" accept="image/png,image/jpeg,image/gif" />
-            <button class="btn btn-primary" id="upload-logo-btn" style="margin-top:8px"><i class="bi bi-upload"></i> Upload Logo</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="file" class="form-input" id="logo-upload" accept="image/png,image/jpeg,image/gif" style="flex:1;min-width:160px" />
+              <button class="btn btn-primary" id="upload-logo-btn"><i class="bi bi-upload"></i> Upload</button>
+              <button class="btn btn-danger" id="remove-logo-btn"><i class="bi bi-trash"></i> Remove</button>
+            </div>
           </div>
         </div>
       </div>
@@ -425,8 +428,11 @@ export default class AdminSettingsPage {
             <div id="favicon-preview" style="margin-bottom:12px">
               <img src="/api/settings/favicon" style="max-height:48px;border-radius:4px;border:1px solid var(--border)" onerror="this.style.display='none'" />
             </div>
-            <input type="file" class="form-input" id="favicon-upload" accept="image/png,image/x-icon,image/svg+xml,image/gif" />
-            <button class="btn btn-primary" id="upload-favicon-btn" style="margin-top:8px"><i class="bi bi-upload"></i> Upload Favicon</button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="file" class="form-input" id="favicon-upload" accept="image/png,image/x-icon,image/svg+xml,image/gif" style="flex:1;min-width:160px" />
+              <button class="btn btn-primary" id="upload-favicon-btn"><i class="bi bi-upload"></i> Upload</button>
+              <button class="btn btn-danger" id="remove-favicon-btn"><i class="bi bi-trash"></i> Remove</button>
+            </div>
           </div>
         </div>
       </div>
@@ -473,7 +479,7 @@ export default class AdminSettingsPage {
       const fd = new FormData();
       fd.append('logo', file);
       try {
-        await api.upload('/settings/favicon', fd);
+        await api.uploadFavicon(fd);
         showToast('Favicon uploaded', 'success');
         const img = document.querySelector('#favicon-preview img');
         if (img) img.src = '/api/settings/favicon?' + Date.now();
@@ -481,6 +487,35 @@ export default class AdminSettingsPage {
         if (link) link.href = '/api/settings/favicon?' + Date.now();
       } catch (err) { showToast('Failed: ' + err.message, 'error'); }
     });
+
+    const removeLogoBtn = document.getElementById('remove-logo-btn');
+    if (removeLogoBtn) {
+      removeLogoBtn.addEventListener('click', async () => {
+        if (!confirm('Remove the current logo?')) return;
+        try {
+          await api.deleteLogo();
+          showToast('Logo removed', 'success');
+          const img = document.querySelector('#logo-preview img');
+          if (img) img.style.display = 'none';
+          document.documentElement.style.setProperty('--logo-display', 'none');
+        } catch (err) { showToast('Failed: ' + err.message, 'error'); }
+      });
+    }
+
+    const removeFaviconBtn = document.getElementById('remove-favicon-btn');
+    if (removeFaviconBtn) {
+      removeFaviconBtn.addEventListener('click', async () => {
+        if (!confirm('Remove the current favicon?')) return;
+        try {
+          await api.deleteFavicon();
+          showToast('Favicon removed', 'success');
+          const img = document.querySelector('#favicon-preview img');
+          if (img) img.style.display = 'none';
+          const link = document.querySelector('link[rel="icon"]');
+          if (link) link.href = '/favicon.svg?' + Date.now();
+        } catch (err) { showToast('Failed: ' + err.message, 'error'); }
+      });
+    }
   }
 
   async renderEmail(container) {
@@ -716,7 +751,7 @@ export default class AdminSettingsPage {
               <td style="font-weight:500">${escapeHtml(r.name)}</td>
               <td style="font-size:13px">${conditions.length > 0 ? conditions.join(', ') : '<span style="color:var(--text-secondary)">All tickets</span>'}</td>
               <td style="font-size:13px;color:var(--primary)">${escapeHtml(action)}</td>
-              <td>${r.is_active ? '<span style="color:var(--success)">Active</span>' : '<span style="color:var(--danger)">Inactive</span>'}</td>
+              <td>${r.is_active ? '<span class="status-badge badge-resolved" style="font-size:11px;padding:2px 10px">Active</span>' : '<span class="status-badge badge-cancelled" style="font-size:11px;padding:2px 10px">Inactive</span>'}</td>
               <td>
                 <button class="btn btn-sm btn-ghost" onclick="window._editWorkflowRule(${r.id})"><i class="bi bi-pencil"></i></button>
                 <button class="btn btn-sm btn-ghost text-danger" onclick="window._delWorkflowRule(${r.id})"><i class="bi bi-trash"></i></button>

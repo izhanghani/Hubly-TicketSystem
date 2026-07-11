@@ -14,6 +14,7 @@ const Sidebar = {
 
   render(active) {
     const items = SIDEBAR_ITEMS;
+    const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
 
     const navItems = items.map(item => `
       <a href="${item.link}" class="nav-item ${active === item.id ? 'active' : ''}" data-link role="menuitem" data-role="${item.roles ? item.roles.join(',') : '*'}" style="${item.roles && this._user && !item.roles.includes(this._user.role) ? 'display:none' : ''}">
@@ -23,13 +24,17 @@ const Sidebar = {
     `).join('');
 
     return `
-      <aside class="sidebar" id="sidebar" role="navigation">
+      <aside class="sidebar ${collapsed ? 'collapsed' : ''}" id="sidebar" role="navigation">
         <div class="sidebar-logo">
-          <div class="logo-icon"><i class="bi bi-ticket-perforated"></i></div>
-          <div class="logo-text">
-            Hubly
+          <div class="logo-icon" id="sidebar-logo-icon"><i class="bi bi-ticket-perforated"></i></div>
+          <div class="logo-text" id="sidebar-logo-text">
+            <span id="sidebar-logo-title">Hubly</span>
             <small id="company-name-display">Professional</small>
           </div>
+          <img id="sidebar-logo-img" src="/api/settings/logo" alt="Logo" style="display:none;max-height:40px;max-width:160px;object-fit:contain" onerror="this.style.display='none';document.getElementById('sidebar-logo-icon').style.display='';document.getElementById('sidebar-logo-text').style.display=''" onload="if(this.src && this.complete && this.naturalWidth>0){this.style.display='';document.getElementById('sidebar-logo-icon').style.display='none';document.getElementById('sidebar-logo-text').style.display='none'}" />
+          <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Toggle sidebar">
+            <i class="bi bi-chevron-left"></i>
+          </button>
         </div>
         <nav class="sidebar-nav">
           <div class="nav-section">
@@ -50,11 +55,11 @@ const Sidebar = {
 
   afterRender(user) {
     this._user = user;
-    const overlay = document.getElementById('sidebar-overlay');
     const sidebar = document.getElementById('sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const overlay = document.getElementById('sidebar-overlay');
     const companyName = document.getElementById('company-name-display');
 
-    // Filter sidebar items by user role
     if (user && sidebar) {
       sidebar.querySelectorAll('.nav-item[data-role]').forEach(el => {
         const roles = el.dataset.role;
@@ -65,6 +70,18 @@ const Sidebar = {
           }
         }
       });
+    }
+
+    const collapseBtn = document.getElementById('sidebar-collapse-btn');
+    if (collapseBtn) {
+      collapseBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        if (mainContent) mainContent.classList.toggle('expanded');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+      });
+      if (sidebar.classList.contains('collapsed') && mainContent) {
+        mainContent.classList.add('expanded');
+      }
     }
 
     if (companyName) {

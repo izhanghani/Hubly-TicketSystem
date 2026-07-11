@@ -2,7 +2,7 @@ import api from '../api.js';
 import Sidebar from '../components/Sidebar.js';
 import Header from '../components/Header.js';
 import { showToast } from '../components/Toast.js';
-import { escapeHtml, formatDate } from '../utils.js';
+import { escapeHtml, formatDate, userAvatar } from '../utils.js';
 import { openModal, closeModal } from '../components/Modal.js';
 
 export default class UsersPage {
@@ -17,11 +17,14 @@ export default class UsersPage {
         <div class="main-content">
           ${Header.render()}
           <div class="page-content">
-            <div class="page-title">
-              <span>User Management</span>
-              <div class="page-title-actions" id="user-actions">
-              </div>
-            </div>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div>
+            <h1 class="page-title" style="font-size:22px;font-weight:700">User Management</h1>
+            <p class="page-desc">Manage system users, roles, and access</p>
+          </div>
+          <div class="page-title-actions" id="user-actions" style="display:flex;gap:8px;flex-wrap:wrap">
+          </div>
+        </div>
 
             <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px" id="user-stats"></div>
 
@@ -134,7 +137,7 @@ export default class UsersPage {
         <div class="table-container">
           <table><thead><tr><th>User</th><th>Username</th><th>Role</th><th>Department</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
           <tbody>${data.users.map(u => `<tr>
-            <td><div style="display:flex;align-items:center;gap:10px"><div class="user-avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">${(u.full_name || '?')[0]}</div><div><div style="font-weight:600;font-size:14px">${escapeHtml(u.full_name)}</div><div style="font-size:12px;color:var(--text-secondary)">${escapeHtml(u.email)}</div></div></div></td>
+            <td><div style="display:flex;align-items:center;gap:10px">${userAvatar(u.full_name, u.avatar, 34)}<div><div style="font-weight:600;font-size:14px">${escapeHtml(u.full_name)}</div><div style="font-size:12px;color:var(--text-secondary)">${escapeHtml(u.email)}</div></div></div></td>
             <td style="font-size:13px">${escapeHtml(u.username)}</td>
             <td><span class="role-badge ${roleColors[u.role] || ''}">${u.role}</span></td>
             <td style="font-size:13px">${escapeHtml(u.department_name || '-')}</td>

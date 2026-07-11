@@ -1,20 +1,25 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const config = require('../config');
 const { run, get, all } = require('../database');
-const { authenticate, authorize } = require('../middleware/auth');
+const { authenticate, authorize, optionalAuth } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-router.get('/', authenticate, (req, res) => {
+router.get('/', optionalAuth, (req, res) => {
   const settings = all('SELECT * FROM settings ORDER BY category, key');
   const grouped = {};
+  const publicCategories = ['branding', 'features', 'theme', 'general'];
+
   settings.forEach(s => {
     if (!grouped[s.category]) grouped[s.category] = [];
     let val = s.value;
     if (s.type === 'boolean') val = val === 'true';
     else if (s.type === 'number') val = parseFloat(val);
     else if (s.type === 'json') { try { val = JSON.parse(val); } catch {} }
+    if (!req.user && !publicCategories.includes(s.category)) return;
     grouped[s.category].push({ id: s.id, key: s.key, value: val, type: s.type, description: s.description });
   });
   res.json(grouped);
@@ -122,11 +127,31 @@ router.post('/logo', authenticate, authorize('admin'), upload.single('logo'), (r
   res.json({ logo: logoPath });
 });
 
+router.delete('/logo', authenticate, authorize('admin'), (req, res) => {
+  const existing = get("SELECT value FROM settings WHERE key = 'app_logo'");
+  if (existing && existing.value) {
+    const filePath = path.join(config.uploadDir, path.basename(existing.value));
+    try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch {}
+  }
+  run("UPDATE settings SET value = '', updated_at = CURRENT_TIMESTAMP WHERE key = 'app_logo'");
+  res.json({ message: 'Logo removed' });
+});
+
 router.post('/favicon', authenticate, authorize('admin'), upload.single('logo'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const faviconPath = `/uploads/${req.file.filename}`;
   run("UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = 'app_favicon'", [faviconPath]);
   res.json({ favicon: faviconPath });
+});
+
+router.delete('/favicon', authenticate, authorize('admin'), (req, res) => {
+  const existing = get("SELECT value FROM settings WHERE key = 'app_favicon'");
+  if (existing && existing.value) {
+    const filePath = path.join(config.uploadDir, path.basename(existing.value));
+    try { if (fs.existsSync(filePath)) fs.unlinkSync(filePath); } catch {}
+  }
+  run("UPDATE settings SET value = '', updated_at = CURRENT_TIMESTAMP WHERE key = 'app_favicon'");
+  res.json({ message: 'Favicon removed' });
 });
 
 router.get('/audit-logs', authenticate, authorize('admin'), (req, res) => {

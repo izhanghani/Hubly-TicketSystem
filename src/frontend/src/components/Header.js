@@ -14,12 +14,13 @@ const Header = {
           <h1 id="page-title">Dashboard</h1>
         </div>
         <div class="header-right">
-          <div class="header-search">
+            <div class="header-search">
             <i class="bi bi-search"></i>
-            <input type="text" placeholder="Search tickets by ID or title..." id="global-search" />
+            <input type="text" placeholder="Search tickets by ID or title..." id="global-search" title="Search tickets (press / to focus)" autocomplete="off" />
+            <span class="search-hint"><span class="kbd">/</span></span>
           </div>
-          <button class="header-btn" id="theme-toggle" title="Toggle theme"><i class="bi bi-moon-stars"></i></button>
-          <button class="header-btn" id="notif-btn" title="Notifications" style="position:relative">
+          <button class="header-btn" id="theme-toggle" title="Toggle theme (dark/light)"><i class="bi bi-moon-stars"></i></button>
+          <button class="header-btn" id="notif-btn" title="Notifications (Ctrl+Shift+N)" style="position:relative">
             <i class="bi bi-bell"></i>
             <span id="notif-badge" class="notif-badge" style="display:none">0</span>
           </button>
@@ -48,16 +49,19 @@ const Header = {
             </div>
           </div>
         </div>
+        <div class="notif-panel" id="notif-panel">
+          <div class="notif-panel-header">
+            <span style="font-weight:600">Notifications</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <button class="btn btn-sm btn-ghost" id="mark-all-read-btn" style="font-size:12px;display:none">Mark all read</button>
+              <button class="btn btn-sm btn-ghost" id="notif-close-btn" style="font-size:14px;padding:2px 6px"><i class="bi bi-x-lg"></i></button>
+            </div>
+          </div>
+          <div class="notif-panel-body" id="notif-list">
+            <div style="text-align:center;padding:20px;color:var(--text-secondary)">Loading...</div>
+          </div>
+        </div>
       </header>
-      <div class="notif-panel" id="notif-panel">
-        <div class="notif-panel-header">
-          <span style="font-weight:600">Notifications</span>
-          <button class="btn btn-sm btn-ghost" id="mark-all-read-btn" style="font-size:12px">Mark all read</button>
-        </div>
-        <div class="notif-panel-body" id="notif-list">
-          <div style="text-align:center;padding:20px;color:var(--text-secondary)">Loading...</div>
-        </div>
-      </div>
     `;
   },
 
@@ -80,7 +84,13 @@ const Header = {
         roleEl.textContent = labels[user.role] || user.role;
       }
       if (avatarEl) {
-        avatarEl.textContent = (user.full_name || user.username || 'U')[0].toUpperCase();
+        if (user.avatar) {
+          avatarEl.innerHTML = `<img src="${user.avatar}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`;
+          avatarEl.style.background = 'none';
+        } else {
+          avatarEl.textContent = (user.full_name || user.username || 'U')[0].toUpperCase();
+          avatarEl.style.background = '';
+        }
       }
       if (dropName) dropName.textContent = user.full_name || user.username;
       if (dropEmail) dropEmail.textContent = user.email || '';
@@ -107,16 +117,33 @@ const Header = {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
     if (mobileBtn && sidebar) {
-      mobileBtn.addEventListener('click', () => {
+      const handler = () => {
         sidebar.classList.toggle('open');
         if (overlay) overlay.classList.toggle('show');
+      };
+      mobileBtn.addEventListener('click', handler);
+    }
+    if (overlay) {
+      overlay.addEventListener('click', () => {
+        sidebar?.classList.remove('open');
+        overlay.classList.remove('show');
       });
     }
 
     const searchInput = document.getElementById('global-search');
     if (searchInput) {
+      let searchTimeout;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          if (searchInput.value.trim()) {
+            navigate(`/tickets?search=${encodeURIComponent(searchInput.value.trim())}`);
+          }
+        }, 500);
+      });
       searchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && searchInput.value.trim()) {
+          clearTimeout(searchTimeout);
           navigate(`/tickets?search=${encodeURIComponent(searchInput.value.trim())}`);
         }
       });
@@ -125,15 +152,17 @@ const Header = {
     const themeBtn = document.getElementById('theme-toggle');
     if (themeBtn) {
       themeBtn.addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', isDark);
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', isDark ? '1' : '0');
         themeBtn.querySelector('i').className = isDark ? 'bi bi-sun' : 'bi bi-moon-stars';
       });
-      if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark-mode');
-        themeBtn.querySelector('i').className = 'bi bi-sun';
-      }
+
+      const saved = localStorage.getItem('darkMode');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const useDark = saved === '1' || (saved === null && prefersDark);
+
+      document.body.classList.toggle('dark-mode', useDark);
+      themeBtn.querySelector('i').className = useDark ? 'bi bi-sun' : 'bi bi-moon-stars';
     }
 
     this.setupNotifications(user);
@@ -160,33 +189,93 @@ const Header = {
       } catch {}
     };
 
+    const getDateGroup = (dateStr) => {
+      if (!dateStr) return 'Unknown';
+      const d = new Date(dateStr);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const weekStart = new Date(today);
+      weekStart.setDate(weekStart.getDate() - 6);
+
+      if (d >= today) return 'Today';
+      if (d >= yesterday) return 'Yesterday';
+      if (d >= weekStart) return 'This Week';
+      return 'Earlier';
+    };
+
+    const getNotifIcon = (type) => {
+      const icons = {
+        warning: { icon: 'bi-exclamation-triangle-fill', bg: 'var(--warning-light)', color: 'var(--warning)' },
+        success: { icon: 'bi-check-circle-fill', bg: 'var(--success-light)', color: 'var(--success)' },
+        error: { icon: 'bi-x-circle-fill', bg: 'var(--danger-light)', color: 'var(--danger)' },
+        info: { icon: 'bi-info-circle-fill', bg: 'var(--info-light)', color: 'var(--info)' },
+        ticket: { icon: 'bi-ticket-fill', bg: 'var(--primary-light)', color: 'var(--primary)' },
+        assign: { icon: 'bi-person-plus-fill', bg: 'var(--purple-light)', color: 'var(--purple)' },
+      };
+      return icons[type] || { icon: 'bi-info-circle-fill', bg: 'var(--primary-light)', color: 'var(--primary)' };
+    };
+
     const loadNotifications = async () => {
       try {
         const data = await api.getNotifications();
-        list.innerHTML = data.notifications.length === 0
-          ? '<div style="text-align:center;padding:30px;color:var(--text-secondary)"><i class="bi bi-bell-slash" style="font-size:32px;display:block;margin-bottom:8px"></i>No notifications</div>'
-          : data.notifications.map(n => `
-            <div class="notif-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
-              <div class="notif-icon"><i class="bi ${n.type === 'warning' ? 'bi-exclamation-triangle' : n.type === 'success' ? 'bi-check-circle' : 'bi-info-circle'}"></i></div>
-              <div class="notif-content">
-                <div class="notif-text">${n.title}</div>
-                ${n.message ? `<div class="notif-desc">${n.message}</div>` : ''}
-                <div class="notif-time">${timeSince(n.created_at)}</div>
-              </div>
-              ${n.is_read ? '' : '<div class="notif-dot"></div>'}
-            </div>`).join('');
-        if (data.notifications.length > 0) {
-          list.querySelectorAll('.notif-item').forEach(el => {
-            el.addEventListener('click', async () => {
-              const id = el.dataset.id;
-              if (id) {
-                try { await api.markNotificationRead(id); } catch {}
-                el.classList.remove('unread');
-                loadUnread();
-              }
-            });
-          });
+        const notifs = data.notifications || [];
+        const markAllBtn = document.getElementById('mark-all-read-btn');
+        if (markAllBtn) markAllBtn.style.display = notifs.length > 0 ? 'inline-flex' : 'none';
+
+        if (notifs.length === 0) {
+          list.innerHTML = `
+            <div class="notif-empty">
+              <i class="bi bi-bell-slash"></i>
+              <div class="notif-empty-title">No notifications</div>
+              <div class="notif-empty-desc">You're all caught up!</div>
+            </div>`;
+          return;
         }
+
+        const groups = {};
+        notifs.forEach(n => {
+          const group = getDateGroup(n.created_at);
+          if (!groups[group]) groups[group] = [];
+          groups[group].push(n);
+        });
+
+        const groupOrder = ['Today', 'Yesterday', 'This Week', 'Earlier', 'Unknown'];
+        let html = '';
+        groupOrder.forEach(g => {
+          if (!groups[g]) return;
+          html += `<div class="notif-group"><div class="notif-group-label">${g}</div>`;
+          groups[g].forEach(n => {
+            const ico = getNotifIcon(n.type);
+            const isUnread = !n.is_read;
+            html += `
+              <div class="notif-item ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+                <div class="notif-icon" style="background:${ico.bg};color:${ico.color}"><i class="bi ${ico.icon}"></i></div>
+                <div class="notif-content">
+                  <div class="notif-text" style="${isUnread ? 'font-weight:600' : ''}">${n.title}</div>
+                  ${n.message ? `<div class="notif-desc">${n.message}</div>` : ''}
+                  <div class="notif-time">${timeSince(n.created_at)}</div>
+                </div>
+                ${isUnread ? '<div class="notif-dot"></div>' : ''}
+              </div>`;
+          });
+          html += '</div>';
+        });
+        list.innerHTML = html;
+
+        list.querySelectorAll('.notif-item').forEach(el => {
+          el.addEventListener('click', async () => {
+            const id = el.dataset.id;
+            if (id && el.classList.contains('unread')) {
+              try { await api.markNotificationRead(id); } catch {}
+              el.classList.remove('unread');
+              el.querySelector('.notif-text')?.style.removeProperty('font-weight');
+              el.querySelector('.notif-dot')?.remove();
+              loadUnread();
+            }
+          });
+        });
       } catch {}
     };
 
@@ -212,13 +301,21 @@ const Header = {
       }
     });
 
+    const closeBtn = document.getElementById('notif-close-btn');
+    if (closeBtn) closeBtn.addEventListener('click', () => panel.classList.remove('show'));
+
     const markAllBtn = document.getElementById('mark-all-read-btn');
     if (markAllBtn) {
       markAllBtn.addEventListener('click', async () => {
         try {
           await api.markAllNotificationsRead();
-          document.querySelectorAll('.notif-item').forEach(el => el.classList.remove('unread'));
+          list.querySelectorAll('.notif-item.unread').forEach(el => {
+            el.classList.remove('unread');
+            el.querySelector('.notif-text')?.style.removeProperty('font-weight');
+            el.querySelector('.notif-dot')?.remove();
+          });
           badge.style.display = 'none';
+          markAllBtn.style.display = 'none';
           showToast('All notifications marked as read', 'info');
         } catch {}
       });
@@ -252,6 +349,8 @@ const Header = {
       if (e.key === 'Escape') {
         const panel = document.getElementById('notif-panel');
         if (panel) panel.classList.remove('show');
+        const dropdown = document.getElementById('user-dropdown');
+        if (dropdown) dropdown.classList.remove('show');
       }
     });
 
@@ -275,15 +374,28 @@ function showKeyboardShortcuts() {
     size: 'sm',
     content: `
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Ctrl+N</span><kbd class="kbd">New Ticket</kbd></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Ctrl+T</span><kbd class="kbd">Tickets List</kbd></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>Ctrl+D</span><kbd class="kbd">Dashboard</kbd></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span>?</span><kbd class="kbd">Show shortcuts</kbd></div>
-        <div style="display:flex;justify-content:space-between;padding:8px 0"><span>/</span><kbd class="kbd">Focus search</kbd></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span><kbd class="kbd">Ctrl+N</kbd></span><span style="font-size:13px;color:var(--text-secondary)">New Ticket</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span><kbd class="kbd">Ctrl+T</kbd></span><span style="font-size:13px;color:var(--text-secondary)">Tickets List</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span><kbd class="kbd">Ctrl+D</kbd></span><span style="font-size:13px;color:var(--text-secondary)">Dashboard</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span><kbd class="kbd">/</kbd></span><span style="font-size:13px;color:var(--text-secondary)">Focus Search</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span><kbd class="kbd">Ctrl+Shift+N</kbd></span><span style="font-size:13px;color:var(--text-secondary)">Notifications</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0"><span><kbd class="kbd">?</kbd></span><span style="font-size:13px;color:var(--text-secondary)">Show Shortcuts</span></div>
       </div>
     `,
     buttons: [{ text: 'Close', class: 'btn btn-primary', onclick: closeModal }]
   });
+}
+
+export function syncAvatar(user) {
+  const avatarEl = document.getElementById('header-avatar');
+  if (!avatarEl) return;
+  if (user.avatar) {
+    avatarEl.innerHTML = `<img src="${user.avatar}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover" />`;
+    avatarEl.style.background = 'none';
+  } else {
+    avatarEl.textContent = (user.full_name || user.username || 'U')[0].toUpperCase();
+    avatarEl.style.background = '';
+  }
 }
 
 export default Header;

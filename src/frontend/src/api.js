@@ -34,6 +34,7 @@ const api = {
 
   // Auth
   login(username, password) { return this.post('/auth/login', { username, password }); },
+  register(data) { return this.post('/auth/register', data); },
   getMe() { return this.get('/auth/me'); },
   updateProfile(data) { return this.put('/auth/me', data); },
   changePassword(current, next) { return this.put('/auth/change-password', { current_password: current, new_password: next }); },
@@ -86,6 +87,9 @@ const api = {
   createCategory(data) { return this.post('/settings/categories', data); },
   updateCategory(id, data) { return this.put(`/settings/categories/${id}`, data); },
   uploadLogo(formData) { return this.upload('/settings/logo', formData); },
+  deleteLogo() { return this.del('/settings/logo'); },
+  uploadFavicon(formData) { return this.upload('/settings/favicon', formData); },
+  deleteFavicon() { return this.del('/settings/favicon'); },
   getAuditLogs(params = {}) {
     const q = new URLSearchParams(params).toString();
     return this.get(`/settings/audit-logs${q ? '?' + q : ''}`);

@@ -56,14 +56,14 @@ router.get('/', authenticate, (req, res) => {
   const params = [];
 
   if (req.user.role === 'user') {
-    where += ' AND t.requester_id = ?';
-    params.push(req.user.id);
+    where += ' AND (t.requester_id = ? OR t.department_id = ?)';
+    params.push(req.user.id, req.user.department_id);
+  } else if (req.user.role === 'agent') {
+    where += ' AND (t.assignee_id = ? OR t.department_id = ?)';
+    params.push(req.user.id, req.user.department_id);
   } else if (req.user.role === 'supervisor') {
     where += ' AND (t.department_id = ? OR t.assignee_id = ? OR t.requester_id = ?)';
     params.push(req.user.department_id, req.user.id, req.user.id);
-  } else if (req.user.role === 'agent' && req.query.mine === 'true') {
-    where += ' AND t.assignee_id = ?';
-    params.push(req.user.id);
   }
 
   if (status) {
@@ -89,8 +89,8 @@ router.get('/', authenticate, (req, res) => {
       tp.name as priority_name, tp.color as priority_color, tp.level as priority_level,
       tt.name as type_name, tt.icon as type_icon, tt.color as type_color,
       tc.name as category_name,
-      requester.full_name as requester_name,
-      assignee.full_name as assignee_name,
+      requester.full_name as requester_name, requester.avatar as requester_avatar,
+      assignee.full_name as assignee_name, assignee.avatar as assignee_avatar,
       se.response_breached, se.resolution_breached
     FROM tickets t
     LEFT JOIN ticket_priorities tp ON t.priority_id = tp.id
@@ -111,8 +111,15 @@ router.get('/:id', authenticate, (req, res) => {
   const ticket = getTicketDetail(req.params.id);
   if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
-  if (req.user.role === 'user' && ticket.requester_id !== req.user.id && ticket.assignee_id !== req.user.id && ticket.is_private) {
-    return res.status(403).json({ error: 'Access denied' });
+  if (req.user.role === 'user') {
+    const canAccess = ticket.requester_id === req.user.id || ticket.department_id === req.user.department_id || ticket.assignee_id === req.user.id;
+    if (!canAccess) return res.status(403).json({ error: 'Access denied' });
+  } else if (req.user.role === 'agent') {
+    const canAccess = ticket.assignee_id === req.user.id || ticket.department_id === req.user.department_id || ticket.requester_id === req.user.id;
+    if (!canAccess) return res.status(403).json({ error: 'Access denied' });
+  } else if (req.user.role === 'supervisor') {
+    const canAccess = ticket.department_id === req.user.department_id || ticket.assignee_id === req.user.id || ticket.requester_id === req.user.id;
+    if (!canAccess) return res.status(403).json({ error: 'Access denied' });
   }
 
   const sla = getSLAByTicketId(ticket.id);
@@ -136,63 +143,79 @@ router.get('/:id', authenticate, (req, res) => {
 });
 
 router.post('/', authenticate, (req, res) => {
-  const { title, description, type_id, category_id, priority_id, department_id, is_private } = req.body;
+  const { title, description, type_id, category_id, priority_id, department_id, is_private, assignee_id } = req.body;
   if (!title) return res.status(400).json({ error: 'Title is required' });
 
   const ticketNumber = generateTicketNumber();
   const result = run(`INSERT INTO tickets 
-    (ticket_number, title, description, status, priority_id, type_id, category_id, requester_id, department_id, is_private)
-    VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?, ?)`,
-    [ticketNumber, title, description || '', priority_id || null, type_id || null, category_id || null, req.user.id, department_id || null, is_private ? 1 : 0]);
+    (ticket_number, title, description, status, priority_id, type_id, category_id, requester_id, department_id, is_private, assignee_id)
+    VALUES (?, ?, ?, 'open', ?, ?, ?, ?, ?, ?, ?)`,
+    [ticketNumber, title, description || '', priority_id || null, type_id || null, category_id || null, req.user.id, department_id || null, is_private ? 1 : 0, assignee_id || null]);
 
   const ticketId = result.lastInsertRowid;
+
+  if (assignee_id) {
+    addHistory(ticketId, req.user.id, 'assignee', null, assignee_id);
+  }
 
   if (priority_id && getSetting('feature_sla_tracking')) {
     createSLA(ticketId, priority_id, null, req.user.role, type_id || null);
   }
 
-  try {
-    const rules = all(`
-      SELECT wr.* FROM workflow_rules wr WHERE wr.is_active = 1 ORDER BY wr.priority ASC, wr.created_at ASC
-    `);
-    const requester = get("SELECT role, department_id FROM users WHERE id = ?", [req.user.id]);
-    for (const rule of rules) {
-      if (rule.match_type_id && rule.match_type_id !== (type_id || null)) continue;
-      if (rule.match_category_id && rule.match_category_id !== (category_id || null)) continue;
-      if (rule.match_priority_id && rule.match_priority_id !== (priority_id || null)) continue;
-      if (rule.match_department_id && rule.match_department_id !== (department_id || null)) continue;
-      if (rule.match_requester_role && rule.match_requester_role !== (requester?.role || '')) continue;
+  if (!assignee_id && getSetting('feature_auto_assign')) {
+    try {
+      const rules = all(`
+        SELECT wr.* FROM workflow_rules wr WHERE wr.is_active = 1 ORDER BY wr.priority ASC, wr.created_at ASC
+      `);
+      const requester = get("SELECT role, department_id FROM users WHERE id = ?", [req.user.id]);
+      let matched = false;
+      for (const rule of rules) {
+        if (rule.match_type_id && rule.match_type_id !== (type_id || null)) continue;
+        if (rule.match_category_id && rule.match_category_id !== (category_id || null)) continue;
+        if (rule.match_priority_id && rule.match_priority_id !== (priority_id || null)) continue;
+        if (rule.match_department_id && rule.match_department_id !== (department_id || null)) continue;
+        if (rule.match_requester_role && rule.match_requester_role !== (requester?.role || '')) continue;
 
-      let assigneeId = null;
-      let deptId = null;
+        let assigneeId = null;
+        let deptId = null;
 
-      if (rule.assign_type === 'department' && rule.assign_department_id) {
-        deptId = rule.assign_department_id;
-        const firstAgent = get("SELECT id FROM users WHERE department_id = ? AND role IN ('agent','admin','supervisor') AND is_active = 1 ORDER BY last_login ASC LIMIT 1", [rule.assign_department_id]);
-        if (firstAgent) assigneeId = firstAgent.id;
-      } else if (rule.assign_type === 'agent' && rule.assign_agent_id) {
-        assigneeId = rule.assign_agent_id;
-        const agentUser = get("SELECT department_id FROM users WHERE id = ?", [rule.assign_agent_id]);
-        if (agentUser) deptId = agentUser.department_id;
-      } else if (rule.assign_type === 'role' && rule.assign_role) {
-        const availableAgent = get("SELECT id, department_id FROM users WHERE role = ? AND is_active = 1 ORDER BY last_login ASC LIMIT 1", [rule.assign_role]);
-        if (availableAgent) { assigneeId = availableAgent.id; deptId = availableAgent.department_id; }
+        if (rule.assign_type === 'department' && rule.assign_department_id) {
+          deptId = rule.assign_department_id;
+          const firstAgent = get("SELECT id FROM users WHERE department_id = ? AND role IN ('agent','admin','supervisor') AND is_active = 1 ORDER BY last_login ASC LIMIT 1", [rule.assign_department_id]);
+          if (firstAgent) assigneeId = firstAgent.id;
+        } else if (rule.assign_type === 'agent' && rule.assign_agent_id) {
+          assigneeId = rule.assign_agent_id;
+          const agentUser = get("SELECT department_id FROM users WHERE id = ?", [rule.assign_agent_id]);
+          if (agentUser) deptId = agentUser.department_id;
+        } else if (rule.assign_type === 'role' && rule.assign_role) {
+          const availableAgent = get("SELECT id, department_id FROM users WHERE role = ? AND is_active = 1 ORDER BY last_login ASC LIMIT 1", [rule.assign_role]);
+          if (availableAgent) { assigneeId = availableAgent.id; deptId = availableAgent.department_id; }
+        }
+
+        if (assigneeId || deptId) {
+          const sets = ['updated_at = CURRENT_TIMESTAMP', 'workflow_rule_id = ?'];
+          const p = [rule.id];
+          if (assigneeId) { sets.push('assignee_id = ?'); p.push(assigneeId); }
+          if (deptId) { sets.push('department_id = ?'); p.push(deptId); }
+          p.push(ticketId);
+          run(`UPDATE tickets SET ${sets.join(', ')} WHERE id = ?`, p);
+          addHistory(ticketId, req.user.id, 'assignee', null, assigneeId);
+          if (deptId) addHistory(ticketId, req.user.id, 'department', null, deptId);
+        }
+        matched = true;
+        break;
       }
 
-      if (assigneeId || deptId) {
-        const sets = ['updated_at = CURRENT_TIMESTAMP', 'workflow_rule_id = ?'];
-        const p = [rule.id];
-        if (assigneeId) { sets.push('assignee_id = ?'); p.push(assigneeId); }
-        if (deptId) { sets.push('department_id = ?'); p.push(deptId); }
-        p.push(ticketId);
-        run(`UPDATE tickets SET ${sets.join(', ')} WHERE id = ?`, p);
-        addHistory(ticketId, req.user.id, 'assignee', null, assigneeId);
-        if (deptId) addHistory(ticketId, req.user.id, 'department', null, deptId);
+      if (!matched) {
+        const anyAgent = get("SELECT id FROM users WHERE role IN ('agent','admin','supervisor') AND is_active = 1 ORDER BY last_login ASC LIMIT 1");
+        if (anyAgent) {
+          run('UPDATE tickets SET assignee_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [anyAgent.id, ticketId]);
+          addHistory(ticketId, req.user.id, 'assignee', null, anyAgent.id);
+        }
       }
-      break;
+    } catch (e) {
+      console.error('[Workflow] Evaluation error:', e.message);
     }
-  } catch (e) {
-    console.error('[Workflow] Evaluation error:', e.message);
   }
 
   run("INSERT INTO ticket_history (ticket_id, user_id, field_name, old_value, new_value) VALUES (?, ?, 'status', NULL, 'open')", [ticketId, req.user.id]);
@@ -264,9 +287,14 @@ router.put('/:id', authenticate, (req, res) => {
 router.post('/:id/comments', authenticate, (req, res) => {
   const existing = get('SELECT * FROM tickets WHERE id = ?', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Ticket not found' });
-  if (req.user.role === 'user' && existing.requester_id !== req.user.id && existing.assignee_id !== req.user.id) {
-    return res.status(403).json({ error: 'Access denied' });
-  }
+
+  const canComment = (
+    req.user.role === 'admin' ||
+    existing.requester_id === req.user.id ||
+    existing.assignee_id === req.user.id ||
+    existing.department_id === req.user.department_id
+  );
+  if (!canComment) return res.status(403).json({ error: 'Access denied' });
 
   const { comment, is_internal } = req.body;
   if (!comment) return res.status(400).json({ error: 'Comment is required' });
@@ -362,7 +390,9 @@ router.get('/export/csv', authenticate, (req, res) => {
   let where = 'WHERE 1=1';
   const params = [];
 
-  if (req.user.role === 'user') { where += ' AND t.requester_id = ?'; params.push(req.user.id); }
+  if (req.user.role === 'user') { where += ' AND (t.requester_id = ? OR t.department_id = ?)'; params.push(req.user.id, req.user.department_id); }
+  else if (req.user.role === 'agent') { where += ' AND (t.assignee_id = ? OR t.department_id = ?)'; params.push(req.user.id, req.user.department_id); }
+  else if (req.user.role === 'supervisor') { where += ' AND (t.department_id = ? OR t.assignee_id = ? OR t.requester_id = ?)'; params.push(req.user.department_id, req.user.id, req.user.id); }
 
   if (status) { const ss = status.split(','); where += ` AND t.status IN (${ss.map(() => '?').join(',')})`; params.push(...ss); }
   if (priority) { where += ' AND t.priority_id = ?'; params.push(parseInt(priority)); }
@@ -413,7 +443,9 @@ router.get('/export/csv', authenticate, (req, res) => {
 
 router.get('/stats/summary', authenticate, (req, res) => {
   let where = ''; const params = [];
-  if (req.user.role === 'user') { where = 'WHERE t.requester_id = ? OR t.assignee_id = ?'; params.push(req.user.id, req.user.id); }
+  if (req.user.role === 'user') { where = 'WHERE (t.requester_id = ? OR t.department_id = ?)'; params.push(req.user.id, req.user.department_id); }
+  else if (req.user.role === 'agent') { where = 'WHERE (t.assignee_id = ? OR t.department_id = ?)'; params.push(req.user.id, req.user.department_id); }
+  else if (req.user.role === 'supervisor') { where = 'WHERE (t.department_id = ? OR t.assignee_id = ? OR t.requester_id = ?)'; params.push(req.user.department_id, req.user.id, req.user.id); }
 
   const stats = {
     total: get(`SELECT COUNT(*) as c FROM tickets t ${where}`, params).c,

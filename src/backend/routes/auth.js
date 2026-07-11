@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { run, get } = require('../database');
+const { run, get, getSetting } = require('../database');
 const config = require('../config');
 const { authenticate } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -48,6 +48,51 @@ router.post('/login', (req, res) => {
   });
 });
 
+router.post('/register', (req, res) => {
+  if (!getSetting('feature_self_registration')) {
+    return res.status(403).json({ error: 'Self-registration is disabled by administrator' });
+  }
+
+  const { username, password, full_name, email, phone, job_title } = req.body;
+  if (!username || !password || !full_name || !email) {
+    return res.status(400).json({ error: 'Username, password, full name, and email are required' });
+  }
+
+  const minLen = parseInt(getSetting('password_min_length'), 10) || 6;
+  if (password.length < minLen) {
+    return res.status(400).json({ error: `Password must be at least ${minLen} characters` });
+  }
+
+  const existing = get('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
+  if (existing) return res.status(409).json({ error: 'Username or email already exists' });
+
+  const hash = bcrypt.hashSync(password, 10);
+  const result = run(`INSERT INTO users (username, password, full_name, email, phone, role, job_title, is_active)
+    VALUES (?, ?, ?, ?, ?, 'user', ?, 1)`,
+    [username, hash, full_name, email, phone || '', job_title || '']);
+
+  const userId = result.lastInsertRowid;
+  run("INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details) VALUES (?, 'register', 'user', ?, ?)",
+    [userId, userId, JSON.stringify({ username })]);
+
+  const user = get('SELECT u.*, d.name as department_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.id = ?', [userId]);
+  const token = jwt.sign(
+    { id: user.id, username: user.username, full_name: user.full_name, email: user.email, role: user.role, department_id: user.department_id, department_name: user.department_name },
+    config.jwtSecret,
+    { expiresIn: config.jwtExpiry }
+  );
+
+  res.status(201).json({
+    token,
+    user: {
+      id: user.id, username: user.username, full_name: user.full_name, email: user.email,
+      role: user.role, department_id: user.department_id, department_name: user.department_name,
+      avatar: user.avatar, phone: user.phone, job_title: user.job_title,
+      signature: user.signature, last_login: user.last_login
+    }
+  });
+});
+
 router.get('/me', authenticate, (req, res) => {
   const user = get('SELECT u.*, d.name as department_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.id = ?', [req.user.id]);
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -61,13 +106,18 @@ router.get('/me', authenticate, (req, res) => {
 });
 
 router.put('/me', authenticate, (req, res) => {
-  const { full_name, email, phone, signature, job_title } = req.body;
+  let { full_name, email, phone, signature, job_title } = req.body;
   run(`UPDATE users SET full_name = COALESCE(?, full_name), email = COALESCE(?, email),
     phone = COALESCE(?, phone), signature = COALESCE(?, signature), job_title = COALESCE(?, job_title), updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-    [full_name || null, email || null, phone || null, signature || null, job_title || null, req.user.id]);
+    [full_name ?? null, email ?? null, phone ?? null, signature ?? null, job_title ?? null, req.user.id]);
 
-  const user = get('SELECT id, username, full_name, email, phone, role, avatar, signature, job_title FROM users WHERE id = ?', [req.user.id]);
-  res.json(user);
+  const user = get('SELECT u.id, u.username, u.full_name, u.email, u.phone, u.role, u.avatar, u.signature, u.job_title, u.department_id, d.name as department_name FROM users u LEFT JOIN departments d ON u.department_id = d.id WHERE u.id = ?', [req.user.id]);
+  res.json({
+    id: user.id, username: user.username, full_name: user.full_name, email: user.email,
+    role: user.role, department_id: user.department_id, department_name: user.department_name,
+    avatar: user.avatar, phone: user.phone, job_title: user.job_title,
+    signature: user.signature
+  });
 });
 
 router.put('/change-password', authenticate, (req, res) => {

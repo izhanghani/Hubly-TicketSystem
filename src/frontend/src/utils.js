@@ -67,3 +67,10 @@ export function getUserRoleBadge(role) {
   const colors = { admin: 'role-admin', agent: 'role-agent', supervisor: 'role-supervisor', user: 'role-user' };
   return `<span class="role-badge ${colors[role] || ''}">${getUserRoleLabel(role)}</span>`;
 }
+
+export function userAvatar(name, avatar, size = 32) {
+  if (avatar) {
+    return `<img src="${avatar}" alt="${escapeHtml(name)}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover" />`;
+  }
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:var(--primary-gradient);color:#fff;font-size:${Math.round(size * 0.45)}px;font-weight:600;flex-shrink:0">${(name || '?')[0].toUpperCase()}</span>`;
+}

@@ -1,19 +1,30 @@
+' Hubly — Ticket System One-Click Launcher
+' Double-click this file to start the app
+
 Set WshShell = CreateObject("WScript.Shell")
 Set FSO = CreateObject("Scripting.FileSystemObject")
 
+' Set working directory to script location
+scriptPath = Replace(WScript.ScriptFullName, WScript.ScriptName, "")
+WshShell.CurrentDirectory = scriptPath
+
+' Setup .env
 If Not FSO.FileExists(".env") Then
   If FSO.FileExists(".env.example") Then
     WshShell.Run "cmd /c copy .env.example .env", 0, True
   End If
 End If
 
+' Install dependencies if needed
 If Not FSO.FolderExists("node_modules") Then
   WshShell.Run "cmd /k npm install && timeout /t 2", 1, True
 End If
 
+' Create data directories
 If Not FSO.FolderExists("data\uploads") Then FSO.CreateFolder("data\uploads")
 If Not FSO.FolderExists("data\logs") Then FSO.CreateFolder("data\logs")
 
+' Read port from .env
 port = "3000"
 If FSO.FileExists(".env") Then
   Set f = FSO.OpenTextFile(".env", 1)
@@ -24,7 +35,9 @@ If FSO.FileExists(".env") Then
   f.Close
 End If
 
-WshShell.Run "cmd /c npm run build", 0, True
-WshShell.Run "cmd /c node src/backend/server.js", 0, False
-WScript.Sleep 5000
-WshShell.Run "http://localhost:" & port
+' Start both frontend (dev) and backend
+WshShell.Run "cmd /c npm run dev", 0, False
+WScript.Sleep 4000
+
+' Open browser
+WshShell.Run "http://localhost:5173"

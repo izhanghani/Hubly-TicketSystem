@@ -2,7 +2,7 @@ import api from '../api.js';
 import Sidebar from '../components/Sidebar.js';
 import Header from '../components/Header.js';
 import { showToast } from '../components/Toast.js';
-import { escapeHtml, statusBadge, priorityBadge, formatDate, timeAgo } from '../utils.js';
+import { escapeHtml, statusBadge, priorityBadge, formatDate, timeAgo, userAvatar } from '../utils.js';
 import { openModal, closeModal } from '../components/Modal.js';
 
 export default class TicketDetailPage {
@@ -26,7 +26,7 @@ export default class TicketDetailPage {
         <div class="main-content">
           ${Header.render()}
           <div class="page-content" id="ticket-detail">
-            <div class="skeleton" style="height:500px"></div>
+            <div class="skeleton" style="height:500px;border-radius:var(--radius-xl)"></div>
           </div>
         </div>
       </div>
@@ -54,8 +54,25 @@ export default class TicketDetailPage {
       this.assignmentRequests = requests || [];
       this.renderTicket(user);
     } catch (err) {
-      document.getElementById('ticket-detail').innerHTML = `<div class="error-page"><h1>Error</h1><p>${escapeHtml(err.message)}</p><a href="/tickets" data-link class="btn">Back to Tickets</a></div>`;
+      document.getElementById('ticket-detail').innerHTML = `<div class="error-page"><div class="error-icon error-icon-404"><i class="bi bi-exclamation-triangle"></i></div><h1>Error Loading Ticket</h1><p>${escapeHtml(err.message)}</p><div class="error-actions"><button class="btn btn-primary" onclick="location.reload()"><i class="bi bi-arrow-repeat"></i> Retry</button><a href="/tickets" data-link class="btn"><i class="bi bi-arrow-left"></i> Back to Tickets</a></div></div>`;
     }
+  }
+
+  renderSlaGauge(pct, status) {
+    const radius = 32;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+    const colors = { ok: 'var(--success)', warning: 'var(--warning)', breached: 'var(--danger)' };
+    const color = colors[status] || 'var(--primary)';
+    return `
+      <div class="sla-gauge">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle class="bg-circle" cx="40" cy="40" r="${radius}" />
+          <circle class="progress-circle" cx="40" cy="40" r="${radius}"
+            style="stroke:${color};stroke-dasharray:${circumference};stroke-dashoffset:${offset}" />
+        </svg>
+        <div class="gauge-text" style="color:${color}">${Math.round(pct)}%</div>
+      </div>`;
   }
 
   renderTicket(user) {
@@ -68,6 +85,8 @@ export default class TicketDetailPage {
     const slaClass = this.sla?.response_breached || this.sla?.resolution_breached ? 'breached' : (slaPct > 80 ? 'warning' : 'ok');
     const pendingRequest = this.assignmentRequests.find(r => r.status === 'pending');
 
+    const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'bmp', 'ico'];
+
     document.getElementById('ticket-detail').innerHTML = `
       <div class="detail-header">
         <div class="detail-title">
@@ -76,7 +95,7 @@ export default class TicketDetailPage {
             ${t.is_private ? '<span class="status-badge badge-pending"><i class="bi bi-lock"></i> Private</span>' : ''}
           </div>
           <div class="meta">
-            <span style="font-weight:700;font-size:14px;color:var(--primary)">${escapeHtml(t.ticket_number)}</span>
+            <span class="ticket-number">${escapeHtml(t.ticket_number)}</span>
             <span class="sep">|</span>
             ${statusBadge(t.status)}
             ${priorityBadge(t)}
@@ -87,35 +106,36 @@ export default class TicketDetailPage {
           </div>
         </div>
         <div class="detail-actions">
-          ${isAgentOrAdmin && t.status !== 'closed' && t.status !== 'cancelled' ? `<button class="btn btn-sm" onclick="window._editTicket()"><i class="bi bi-pencil"></i> Edit</button>` : ''}
+          ${isAgentOrAdmin && t.status !== 'closed' && t.status !== 'cancelled' ? `<button class="btn btn-sm btn-outline-primary" onclick="window._editTicket()"><i class="bi bi-pencil"></i> Edit</button>` : ''}
           ${isAgentOrAdmin && t.status !== 'resolved' && t.status !== 'closed' && t.status !== 'cancelled' ? `<button class="btn btn-sm btn-success" onclick="window._resolveTicket()"><i class="bi bi-check-lg"></i> Resolve</button>` : ''}
-          ${t.status === 'resolved' && (t.assignee_id === user.id || isSupervisorOrAdmin) ? `<button class="btn btn-sm btn-success" onclick="window._closeTicket()"><i class="bi bi-check2-all"></i> Close Ticket</button>` : ''}
+          ${t.status === 'resolved' && (t.assignee_id === user.id || isSupervisorOrAdmin) ? `<button class="btn btn-sm btn-success" onclick="window._closeTicket()"><i class="bi bi-check2-all"></i> Close</button>` : ''}
           ${isAgentOrAdmin && t.status !== 'closed' && t.status !== 'cancelled' ? `<button class="btn btn-sm btn-danger" onclick="window._cancelTicket()"><i class="bi bi-x-lg"></i> Cancel</button>` : ''}
         </div>
       </div>
 
       ${this.sla ? `
-      <div class="sla-bar">
-        <div class="sla-label">
-          <span><strong>Response:</strong> ${this.sla.first_response_at ? '<span style="color:var(--success)">Done</span>' : '<span style="color:var(--warning)">Pending</span>'} &middot; <strong>Resolution:</strong> ${this.sla.resolved_at ? '<span style="color:var(--success)">Done</span>' : '<span style="color:var(--warning)">Pending</span>'}</span>
-          <span class="sla-status">${this.sla.response_breached ? '<span style="color:var(--danger)"><i class="bi bi-exclamation-triangle-fill"></i> Response Breached!</span>' : ''} ${this.sla.resolution_breached ? '<span style="color:var(--danger)"><i class="bi bi-exclamation-triangle-fill"></i> Resolution Breached!</span>' : ''}</span>
+      <div class="sla-bar ${slaClass}" style="display:flex;align-items:center;gap:16px">
+        ${this.renderSlaGauge(slaPct, slaClass)}
+        <div style="flex:1">
+          <div class="sla-label">
+            <span><i class="bi bi-clock-history"></i> <strong>Response:</strong> ${this.sla.first_response_at ? '<span style="color:var(--success)">Done</span>' : '<span style="color:var(--warning)">Pending</span>'} &middot; <strong>Resolution:</strong> ${this.sla.resolved_at ? '<span style="color:var(--success)">Done</span>' : '<span style="color:var(--warning)">Pending</span>'}</span>
+            <span class="sla-status">${this.sla.response_breached ? '<span class="sla-breached"><i class="bi bi-exclamation-triangle-fill"></i> Response Breached!</span>' : ''} ${this.sla.resolution_breached ? '<span class="sla-breached"><i class="bi bi-exclamation-triangle-fill"></i> Resolution Breached!</span>' : ''}</span>
+          </div>
+          <div class="sla-track" style="margin-top:4px"><div class="sla-fill ${slaClass}" style="width:${Math.min(slaPct, 100)}%"></div></div>
         </div>
-        <div class="sla-track"><div class="sla-fill ${slaClass}" style="width:${Math.min(slaPct, 100)}%"></div></div>
       </div>` : ''}
 
       ${pendingRequest ? `
-      <div class="detail-section">
-        <div class="card" style="border-left:4px solid var(--warning);margin-bottom:20px">
-          <div class="card-body" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <div><i class="bi bi-hourglass-split" style="color:var(--warning);font-size:20px;margin-right:8px"></i>
-            <strong>Assignment Request Pending</strong> - ${escapeHtml(pendingRequest.requester_name)} requested ${pendingRequest.agent_name ? escapeHtml(pendingRequest.agent_name) : 'any available agent'}
-            ${pendingRequest.note ? ': ' + escapeHtml(pendingRequest.note) : ''}</div>
-            ${isSupervisorOrAdmin ? `
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              <button class="btn btn-sm btn-success" onclick="window._approveRequest(${pendingRequest.id})"><i class="bi bi-check"></i> Approve</button>
-              <button class="btn btn-sm btn-danger" onclick="window._rejectRequest(${pendingRequest.id})"><i class="bi bi-x"></i> Reject</button>
-            </div>` : ''}
-          </div>
+      <div class="card" style="border-left:4px solid var(--warning);margin-bottom:20px;background:var(--warning-light);">
+        <div class="card-body" style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div><i class="bi bi-hourglass-split" style="color:var(--warning);font-size:20px;margin-right:8px"></i>
+          <strong>Assignment Request Pending</strong> - ${escapeHtml(pendingRequest.requester_name)} requested ${pendingRequest.agent_name ? escapeHtml(pendingRequest.agent_name) : 'any available agent'}
+          ${pendingRequest.note ? ': ' + escapeHtml(pendingRequest.note) : ''}</div>
+          ${isSupervisorOrAdmin ? `
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button class="btn btn-sm btn-success" onclick="window._approveRequest(${pendingRequest.id})"><i class="bi bi-check"></i> Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="window._rejectRequest(${pendingRequest.id})"><i class="bi bi-x"></i> Reject</button>
+          </div>` : ''}
         </div>
       </div>` : ''}
 
@@ -128,30 +148,49 @@ export default class TicketDetailPage {
 
           ${t.resolution_notes ? `
           <div class="card detail-section">
-            <div class="card-header"><h3><i class="bi bi-check-circle" style="color:var(--success)"></i> Resolution Notes</h3></div>
+            <div class="card-header"><h3 style="color:var(--success)"><i class="bi bi-check-circle"></i> Resolution Notes</h3></div>
             <div class="card-body" style="background:var(--success-light);border-radius:0 0 var(--radius-xl) var(--radius-xl)"><p style="white-space:pre-wrap">${escapeHtml(t.resolution_notes)}</p></div>
           </div>` : ''}
 
           ${this.attachments.length > 0 ? `
           <div class="card detail-section">
             <div class="card-header"><h3><i class="bi bi-paperclip"></i> Attachments (${this.attachments.length})</h3></div>
-            <div class="card-body"><div class="attachment-list">${this.attachments.map(a => `
-              <div class="attachment-item"><i class="bi bi-file-earmark"></i><span>${escapeHtml(a.original_name)}</span><span style="color:var(--text-secondary);font-size:12px">(${(a.size / 1024).toFixed(1)} KB)</span></div>`).join('')}
-            </div></div>
+            <div class="card-body">
+              <div class="attachments-grid">${this.attachments.map(a => {
+                const ext = (a.original_name || '').split('.').pop()?.toLowerCase();
+                const isImage = imageExts.includes(ext);
+                const downloadUrl = `/api/tickets/${this.ticket.id}/attachments/${a.id}/download`;
+                return isImage ? `
+                  <div class="attachment-card" onclick="window.open('${downloadUrl}','_blank')">
+                    <div class="attachment-preview"><img src="${downloadUrl}" alt="${escapeHtml(a.original_name)}" loading="lazy" onerror="this.parentElement.innerHTML='<i class=\\'bi bi-file-earmark-image\\' style=\\'font-size:28px;color:var(--text-light)\\'>'" /></div>
+                    <div class="attachment-info">
+                      <span class="attachment-name">${escapeHtml(a.original_name)}</span>
+                      <span class="attachment-size">${(a.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                  </div>` : `
+                  <div class="attachment-card" onclick="window.open('${downloadUrl}','_blank')">
+                    <div class="attachment-preview file-icon"><i class="bi bi-file-earmark"></i></div>
+                    <div class="attachment-info">
+                      <span class="attachment-name">${escapeHtml(a.original_name)}</span>
+                      <span class="attachment-size">${(a.size / 1024).toFixed(1)} KB</span>
+                    </div>
+                  </div>`;
+              }).join('')}</div>
+            </div>
           </div>` : ''}
 
           <div class="card detail-section">
             <div class="card-header"><h3><i class="bi bi-chat-dots"></i> Comments (${this.comments.length})</h3></div>
             <div class="card-body">
-              ${this.comments.length === 0 ? '<p style="color:var(--text-secondary);padding:10px;text-align:center">No comments yet. Be the first to respond.</p>' : ''}
+              ${this.comments.length === 0 ? '<div class="empty-state empty-state-sm" style="padding:20px"><i class="bi bi-chat-dots"></i><p>No comments yet. Be the first to respond.</p></div>' : ''}
               ${this.comments.map(c => `
-              <div class="comment">
-                <div class="comment-avatar">${(c.user_name || '?')[0].toUpperCase()}</div>
+              <div class="comment ${c.is_internal ? 'comment-internal' : ''}">
+                <div class="comment-avatar">${userAvatar(c.user_name, c.user_avatar, 36)}</div>
                 <div class="comment-body">
                   <div class="comment-header">
                     <span class="name">${escapeHtml(c.user_name)}</span>
                     <span class="time">${formatDate(c.created_at)}</span>
-                    ${c.is_internal ? '<span class="internal-badge">Internal</span>' : ''}
+                    ${c.is_internal ? '<span class="internal-badge"><i class="bi bi-lock"></i> Internal</span>' : ''}
                   </div>
                   <div class="comment-text">${escapeHtml(c.comment)}</div>
                 </div>
@@ -165,10 +204,10 @@ export default class TicketDetailPage {
                   </div>
                   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
                     <button type="submit" class="btn btn-primary" id="comment-submit"><i class="bi bi-send"></i> Post Comment</button>
-                    ${isAgentOrAdmin ? `<label class="toggle"><input type="checkbox" id="comment-internal" /><span class="slider"></span></label><span style="font-size:13px;color:var(--text-secondary)">Internal note (hidden from requester)</span>` : ''}
+                    ${isAgentOrAdmin ? `<label class="toggle-sm"><input type="checkbox" id="comment-internal" /><span class="slider-sm"></span> Internal note</label>` : ''}
                   </div>
                 </form>
-              </div>` : '<p style="color:var(--text-secondary);text-align:center;margin-top:16px;padding:16px;background:var(--bg);border-radius:8px">This ticket is closed. Comments are disabled.</p>'}
+              </div>` : '<div class="closed-comment-notice"><i class="bi bi-lock-fill"></i> This ticket is closed. Comments are disabled.</div>'}
             </div>
           </div>
         </div>
@@ -180,12 +219,12 @@ export default class TicketDetailPage {
               <div class="info-grid">
                 <div class="info-item"><div class="label">Status</div><div class="value">${statusBadge(t.status)}</div></div>
                 <div class="info-item"><div class="label">Priority</div><div class="value">${priorityBadge(t)}</div></div>
-                <div class="info-item"><div class="label">Type</div><div class="value">${t.type_name ? `<span style="color:${t.type_color}">${escapeHtml(t.type_name)}</span>` : '-'}</div></div>
+                <div class="info-item"><div class="label">Type</div><div class="value">${t.type_name ? `<span style="color:${t.type_color}"><i class="bi bi-${t.type_icon || 'ticket'}"></i> ${escapeHtml(t.type_name)}</span>` : '-'}</div></div>
                 <div class="info-item"><div class="label">Category</div><div class="value">${escapeHtml(t.category_name || '-')}</div></div>
                 <div class="info-item"><div class="label">Department</div><div class="value">${escapeHtml(t.department_name || '-')}</div></div>
-                <div class="info-item"><div class="label">Source</div><div class="value"><span class="badge badge-closed">${t.source || 'web'}</span></div></div>
-                <div class="info-item"><div class="label">Requester</div><div class="value"><div style="display:flex;align-items:center;gap:6px"><div class="comment-avatar" style="width:24px;height:24px;font-size:10px">${(t.requester_full_name || t.requester_name || '?')[0]}</div>${escapeHtml(t.requester_full_name || t.requester_name || '-')}</div></div></div>
-                <div class="info-item"><div class="label">Assignee</div><div class="value">${t.assignee_full_name || t.assignee_name ? `<div style="display:flex;align-items:center;gap:6px"><div class="comment-avatar" style="width:24px;height:24px;font-size:10px;background:var(--success)">${(t.assignee_full_name || t.assignee_name)[0]}</div>${escapeHtml(t.assignee_full_name || t.assignee_name)}</div>` : '<span style="color:var(--text-light)">Unassigned</span>'}</div></div>
+                <div class="info-item"><div class="label">Source</div><div class="value"><span class="source-badge">${t.source || 'web'}</span></div></div>
+                <div class="info-item"><div class="label">Requester</div><div class="value"><div class="user-cell">${userAvatar(t.requester_full_name || t.requester_name, t.requester_avatar, 26)}<span>${escapeHtml(t.requester_full_name || t.requester_name || '-')}</span></div></div></div>
+                <div class="info-item"><div class="label">Assignee</div><div class="value">${t.assignee_full_name || t.assignee_name ? `<div class="user-cell">${userAvatar(t.assignee_full_name || t.assignee_name, t.assignee_avatar, 26)}<span>${escapeHtml(t.assignee_full_name || t.assignee_name)}</span></div>` : '<span class="unassigned-badge">Unassigned</span>'}</div></div>
                 <div class="info-item"><div class="label">Created</div><div class="value" style="font-size:13px">${formatDate(t.created_at)}</div></div>
                 <div class="info-item"><div class="label">Updated</div><div class="value" style="font-size:13px">${formatDate(t.updated_at)}</div></div>
                 ${t.resolved_at ? `<div class="info-item"><div class="label">Resolved</div><div class="value" style="font-size:13px;color:var(--success)">${formatDate(t.resolved_at)}</div></div>` : ''}
@@ -198,12 +237,19 @@ export default class TicketDetailPage {
           <div class="card detail-section">
             <div class="card-header"><h3><i class="bi bi-arrow-repeat"></i> History</h3></div>
             <div class="card-body">
-              <div class="timeline">${this.history.map(h => `
+              <div class="timeline">${this.history.map(h => {
+                const fieldIcons = { status: 'bi-flag', priority: 'bi-flag', assignee: 'bi-person', department: 'bi-building', type: 'bi-ticket', category: 'bi-tag', description: 'bi-card-text', title: 'bi-pencil' };
+                const icon = fieldIcons[h.field_name?.toLowerCase()] || 'bi-arrow-right-circle';
+                return `
                 <div class="timeline-item">
-                  <div class="time">${formatDate(h.created_at)}</div>
-                  <div class="desc"><strong>${h.field_name}</strong> changed from <span style="color:var(--text-secondary)">"${escapeHtml(h.old_value || 'empty')}"</span> to <span style="color:var(--primary)">"${escapeHtml(h.new_value || 'empty')}"</span> <span style="font-size:12px;color:var(--text-secondary)">by ${escapeHtml(h.user_name || 'System')}</span></div>
-                </div>`).join('')}
-              </div>
+                  <div class="timeline-icon" style="background:${this.getFieldColor(h.field_name)}"><i class="bi ${icon}"></i></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header"><strong>${h.field_name}</strong> <span style="font-size:12px;color:var(--text-secondary)">by ${escapeHtml(h.user_name || 'System')}</span></div>
+                    <div class="timeline-change"><span class="change-old">"${escapeHtml(h.old_value || 'empty')}"</span> <i class="bi bi-arrow-right" style="color:var(--text-light);font-size:12px"></i> <span class="change-new">"${escapeHtml(h.new_value || 'empty')}"</span></div>
+                    <div class="timeline-time">${formatDate(h.created_at)}</div>
+                  </div>
+                </div>`;
+              }).join('')}</div>
             </div>
           </div>` : ''}
         </div>
@@ -211,6 +257,11 @@ export default class TicketDetailPage {
     `;
 
     this.attachEventHandlers(user);
+  }
+
+  getFieldColor(field) {
+    const colors = { status: 'var(--warning)', priority: 'var(--danger)', assignee: 'var(--success)', department: 'var(--info)', type: 'var(--purple)', category: 'var(--pink)', description: 'var(--primary)', title: 'var(--orange)' };
+    return colors[field?.toLowerCase()] || 'var(--secondary)';
   }
 
   getSLAPercentage() {
@@ -226,7 +277,7 @@ export default class TicketDetailPage {
   attachEventHandlers(user) {
     const form = document.getElementById('comment-form');
     if (form) {
-      form.addEventListener('submit', async (e) => {
+      const handler = async (e) => {
         e.preventDefault();
         const text = document.getElementById('comment-text');
         const internal = document.getElementById('comment-internal');
@@ -239,6 +290,7 @@ export default class TicketDetailPage {
         try {
           await api.addComment(this.ticket.id, { comment: text.value, is_internal: internal?.checked || false });
           text.value = '';
+          if (internal) internal.checked = false;
           showToast('Comment added', 'success');
           await this.loadTicket(this.ticket.id, user);
         } catch (err) {
@@ -246,7 +298,8 @@ export default class TicketDetailPage {
           btn.disabled = false;
           btn.innerHTML = '<i class="bi bi-send"></i> Post Comment';
         }
-      });
+      };
+      form.addEventListener('submit', handler);
     }
 
     window._editTicket = () => this.showEditModal(user);
@@ -270,10 +323,11 @@ export default class TicketDetailPage {
   confirmAction(action, user) {
     const labels = { resolve: 'Resolve', close: 'Close', cancel: 'Cancel' };
     const icons = { resolve: 'bi-check-lg', close: 'bi-check2-all', cancel: 'bi-x-lg' };
+    const colors = { resolve: 'var(--success)', close: 'var(--success)', cancel: 'var(--danger)' };
     const actionMsg = action === 'close' && this.ticket.assignee_name ? `This ticket will be closed by <strong>${escapeHtml(this.ticket.assignee_name)}</strong>` : '';
     openModal({
       title: `${labels[action]} Ticket`,
-      content: `<div style="text-align:center;padding:10px"><i class="bi ${icons[action]}" style="font-size:48px;color:${action === 'cancel' ? 'var(--danger)' : 'var(--success)'};margin-bottom:12px;display:block"></i>
+      content: `<div style="text-align:center;padding:10px"><i class="bi ${icons[action]}" style="font-size:48px;color:${colors[action]};margin-bottom:12px;display:block"></i>
         <p style="font-size:15px">Are you sure you want to <strong>${action}</strong> this ticket?</p>
         ${actionMsg ? `<p style="font-size:13px;color:var(--text-secondary);margin-top:8px">${actionMsg}</p>` : ''}
         ${action === 'resolve' ? `
